@@ -75,6 +75,7 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ first'), 3)
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 2'), 5)
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 3'), None)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list c b.p.d.q "hello" $ join "-"'), 'asdf-test-hello')
 
     def test_transformJson1(self):
         faa1_json = {
