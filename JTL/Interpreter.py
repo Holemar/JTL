@@ -21,9 +21,9 @@
 # SOFTWARE.
 
 import types
-from . import Functions
-from . import Parser
-from . import Utility
+from JTL import Functions
+from JTL import Parser
+from JTL import Utility
 
 
 def applyOperation(value, operation, args, location):
@@ -41,7 +41,7 @@ def applyOperation(value, operation, args, location):
         index = Functions.to_int(operation)
         if index is not None:
             # Do not raise IndexError: list index out of range
-            if value is not None and len(value) >= index - 1:
+            if value is not None and len(value) - 1 >= index:
                 return value[index]
             else:
                 return None

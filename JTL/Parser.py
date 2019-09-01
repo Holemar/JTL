@@ -23,7 +23,7 @@
 import json
 import shlex
 
-from . import Utility
+from JTL import Utility
 
 
 def parseTransform(transform):

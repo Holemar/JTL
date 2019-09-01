@@ -55,7 +55,12 @@ def main():
 
     #Read the JSON in from stdin
     #TODO: error handling
-    data = json.loads(sys.stdin.read())
+    if arguments.source_file:
+        with open(arguments.source_file, 'r') as f:
+            data = f.read()
+    if not data:
+        data = sys.stdin.read()
+    data = json.loads(data)
 
     #Transform the JSON
     #TODO: cleaner way to do this

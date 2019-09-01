@@ -62,5 +62,6 @@ class FunctionsTest(unittest.TestCase):
         self.assertEqual(Functions.to_number(1.1), 1.1)
         self.assertEqual(Functions.to_number('1.23e7'), 12300000.0)
 
+
 if __name__ == "__main__":
     unittest.main()

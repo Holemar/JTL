@@ -70,6 +70,11 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, 'a $ keys $ sorted'), ['X', 'Y'])
         self.assertEqual(Interpreter.transform(self._testData, 'a $ values $ sorted'), [2, 3])
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y'), [3, 2])
+        self.assertEqual(Interpreter.transform(self._testData, '* $ list a.X a.Y'), [3, 2])
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ 0'), 3)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ first'), 3)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 2'), 5)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 3'), None)
 
     def test_transformJson1(self):
         faa1_json = {

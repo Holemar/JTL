@@ -49,5 +49,6 @@ class UtilityTest(unittest.TestCase):
         self.assertEqual(Utility.extractSplitPath(self._testData, ['b', 'p', 'd', 'q']), 'test')
         self.assertEqual(Utility.extractSplitPath(self._testData, ['c']), 'asdf')
 
+
 if __name__ == "__main__":
     unittest.main()
