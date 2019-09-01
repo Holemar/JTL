@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #
@@ -19,189 +20,239 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import sys
 import binascii
 import hashlib
 import hmac
 import math
+import uuid
+import time
+import datetime
 
-########## Basic Functions ##########
+# ######### Basic Functions ##########
 
-def toBool(data):
-	return data == 'True' or data == 'true'
 
-def toFloat(data):
-	try:
-		return float(data)
-	except ValueError:
-		return None
-	except TypeError:
-		return None
+def to_bool(data):
+    return data in (1, True, 'True', 'true')
 
-def toInt(data):
-	try:
-		return int(data)
-	except ValueError:
-		return None
-	except TypeError:
-		return None
 
-def toNumber(data):
-	#TODO: figure out how to handle this cleanly (don't round floats)
-	if type(data) is float:
-		return data
+def to_float(data):
+    try:
+        return float(data)
+    except (ValueError, TypeError) as e:
+        return None
 
-	intValue = toInt(data)
-	if intValue is not None:
-		return intValue
 
-	return toFloat(data)
+def to_int(data):
+    try:
+        return int(data)
+    except (ValueError, TypeError) as e:
+        pass
+
+    data = to_float(data)
+    if data is None:
+        return None
+
+    try:
+        return int(data)
+    except (ValueError, TypeError) as e2:
+        return None
+
+
+def to_number(data):
+    if isinstance(data, (int, float)):
+        return data
+
+    float_value = to_float(data)
+    if float_value is not None:
+        int_value = int(float_value)
+        if float_value == int_value:
+            return int_value
+        return float_value
+
+    return float_value
+
+
+def to_string(data):
+    if data is None:
+        return None
+    # datetime
+    if isinstance(data, datetime.datetime):
+        return data.strftime('%Y-%m-%dT%H:%M:%S')
+    # date
+    elif isinstance(data, datetime.date):
+        return data.strftime('%Y-%m-%d')
+    # time
+    elif isinstance(data, time.struct_time):
+        return time.strftime('%Y/%m/%dT%H:%M:%S', data)
+    # uuid
+    elif isinstance(data, uuid.UUID):
+        return data.hex
+    # bytes
+    if isinstance(data, bytes):
+        for encoding in ('utf-8', 'gbk', 'big5', sys.getdefaultencoding(), 'unicode-escape'):
+            try:
+                return data.decode(encoding)
+            except UnicodeDecodeError as e:
+                pass
+        # If that fails, ignore error messages
+        return data.decode("utf8", "ignore")
+    return str(data)
+
 
 functions = {
-	#Any
-	'toString': str,
-	'toBool': toBool,
-	'toFloat': toFloat,
-	'toInt': toInt,
-	'toNumber': toNumber,
+    # Any
+    'toString': to_string,
+    'toBool': to_bool,
+    'toFloat': to_float,
+    'toInt': to_int,
+    'toNumber': to_number,
 
-	#None
-	'isNull': lambda x: x is None,
+    # None
+    'isNull': lambda x: x is None,
 
-	'default': lambda x, y: x if x is not None else y,
-	'defaultNan': lambda x: x if x is not None else float('nan'),
+    'default': lambda x, y: x if x is not None else y,
+    'defaultNan': lambda x: x if x is not None else float('nan'),
 
-	#Sequence
-	'first': lambda s: s[0] if s is not None and len(s) > 1 else None,
-	'rest': lambda s: s[1:] if s is not None and len(s) > 1 else None,
-	'last': lambda s: s[-1] if s is not None and len(s) > 1 else None,
-	'init': lambda s: s[:-1] if s is not None and len(s) > 1 else None,
+    # Sequence
+    'first': lambda s: s[0] if s is not None and len(s) >= 1 else None,
+    'last': lambda s: s[-1] if s is not None and len(s) >= 1 else None,
+    'rm_first': lambda s: s[1:] if s is not None and len(s) >= 1 else [],
+    'rm_last': lambda s: s[:-1] if s is not None and len(s) >= 1 else [],
 
-	#String
-	'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(s) if s is not None else None,
+    # String
+    'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(s) if s is not None else None,
 }
 
-########## Maybe Functions ##########
 
-#Functions in here handle null like the Option type
+# ######### Maybe Functions ##########
 
+# Functions in here handle null like the Option type
 def maybe(f):
-	return lambda *args: f(*args) if None not in args else None
+    return lambda *args: f(*args) if None not in args else None
 
-#Functions that will be wrapped in maybe()
+
+# Functions that will be wrapped in maybe()
 maybeFunctions = {
-	#Bool
-	'not': lambda x: not x,
+    # Bool
+    'not': lambda x: not x,
+    'and': lambda x, y: bool(x and y),
+    'or': lambda x, y:  bool(x or y),
 
-	#Dict
-	'keys': lambda d: list(d.keys()),
-	'values': lambda d: list(d.values()),
+    # Dict
+    'keys': lambda d: list(d.keys()),
+    'values': lambda d: list(d.values()),
 
-	#Numer
-	'+': lambda x, y: x + y,
-	'-': lambda x, y: x - y,
-	'*': lambda x, y: x * y,
-	'/': lambda x, y: x / y,
-	'**': lambda x, y: x ** y,
-	'%': lambda x, y: x % y,
+    # Numer
+    '+': lambda x, y: x + y,
+    '-': lambda x, y: x - y,
+    '*': lambda x, y: x * y,
+    '/': lambda x, y: x / y,
+    '**': lambda x, y: x ** y,
+    '%': lambda x, y: x % y,
 
-	'==': lambda x, y: x == y,
-	'!=': lambda x, y: x != y,
-	'<': lambda x, y: x < y,
-	'<=': lambda x, y: x <= y,
-	'>': lambda x, y: x > y,
-	'>=': lambda x, y: x >= y,
+    '==': lambda x, y: x == y,
+    '!=': lambda x, y: x != y,
+    '<': lambda x, y: x < y,
+    '<=': lambda x, y: x <= y,
+    '>': lambda x, y: x > y,
+    '>=': lambda x, y: x >= y,
 
-	'isFinite': math.isfinite,
-	'isNan': math.isnan,
+    'isFinite': math.isfinite,
+    'isNan': math.isnan,
 
-	'abs': abs,
-	'ceil': math.ceil,
-	'cos': math.cos,
-	'cosh': math.cosh,
-	'erf': math.erf,
-	'exp': math.exp,
-	'floor': math.floor,
-	'lg': math.log2,
-	'ln': math.log,
-	'log': math.log10,
-	'sin': math.sin,
-	'sinh': math.sinh,
-	'sqrt': math.sqrt,
-	'tan': math.tan,
-	'tanh': math.tanh,
+    'abs': abs,
+    'ceil': math.ceil,
+    'cos': math.cos,
+    'cosh': math.cosh,
+    'erf': math.erf,
+    'exp': math.exp,
+    'floor': math.floor,
+    'lg': math.log2,
+    'ln': math.log,
+    'log': math.log10,
+    'sin': math.sin,
+    'sinh': math.sinh,
+    'sqrt': math.sqrt,
+    'tan': math.tan,
+    'tanh': math.tanh,
 
-	#Sequence
-	'count': lambda s, f: s.count(f),
-	'length': len,
-	'max': max,
-	'min': min,
-	'sorted': lambda s: sorted(s),
-	'sum': sum,
-	'unique': lambda s: list(set(s)),
+    # Sequence
+    'count': lambda s, f: s.count(f),
+    'length': len,
+    'max': max,
+    'min': min,
+    'sorted': sorted,
+    'sum': sum,
+    'unique': lambda s: list(set(s)),
+    'list': lambda x, *args: list(args),
 
-	#String
-	'lower': lambda s: s.lower(),
-	'upper': lambda s: s.upper(),
-	'capitalize': lambda s: s.capitalize(),
-	'swapCase': lambda s: s.swapcase(),
+    # String
+    'lower': lambda s: s.lower(),
+    'upper': lambda s: s.upper(),
+    'capitalize': lambda s: s.capitalize(),
+    'swapCase': lambda s: s.swapcase(),
 
-	'strip': lambda s: s.strip(),
-	'lstrip': lambda s: s.lstrip(),
-	'rstrip': lambda s: s.rstrip(),
+    'strip': lambda s: s.strip(),
+    'lstrip': lambda s: s.lstrip(),
+    'rstrip': lambda s: s.rstrip(),
 
-	'find': lambda s, f: s.find(f),
-	'replace': lambda s, f, g: s.replace(f, g),
-	'startsWith': lambda s, f: s.startswith(f),
-	'endsWith': lambda s, f: s.endswith(f),
+    'find': lambda s, f: s.find(f),
+    'replace': lambda s, f, g: s.replace(f, g),
+    'startsWith': lambda s, f: s.startswith(f),
+    'endsWith': lambda s, f: s.endswith(f),
 
-	'split': lambda s, sp: s.split(sp),
-	'lines': lambda s: s.split('\n'),
-	'unlines': lambda s: '\n'.join(s),
-	'words': lambda s: s.split(' '),
-	'unwords': lambda s: ' '.join(s),
+    'split': lambda s, sp: s.split(sp),
+    'lines': lambda s: s.split('\n'),
+    'unlines': lambda s: '\n'.join(s),
+    'words': lambda s: s.split(' '),
+    'unwords': lambda s: ' '.join(s),
 }
 
 for name in maybeFunctions:
-	function = maybeFunctions[name]
-	functions[name] = maybe(function)
+    function = maybeFunctions[name]
+    functions[name] = maybe(function)
 
-########## Hash Functions ##########
+
+# ######### Hash Functions ##########
 
 def hashFunction(hashConstructor):
-	"""
-	Accepts the constructor of a hash algorithm and returns a function from a string to a hexified string digest.
+    """
+    Accepts the constructor of a hash algorithm and returns a function from a string to a hexified string digest.
 
-	:param hashConstructor: hashing algorithm (e.g. hashlib.md5)
-	:return: f(str)
-	"""
-	def f(s):
-		h = hashConstructor()
-		h.update(s.encode('utf8', 'ignore'))
-		return binascii.hexlify(h.digest()).decode('utf8')
-	return f
+    :param hashConstructor: hashing algorithm (e.g. hashlib.md5)
+    :return: f(str)
+    """
+    def f(s):
+        h = hashConstructor()
+        h.update(s.encode('utf8', 'ignore'))
+        return binascii.hexlify(h.digest()).decode('utf8')
+    return f
+
 
 def hmacFunction(hashConstructor):
-	"""
-	Accepts the constructor of a hash algorithm and returns an HMAC function.
+    """
+    Accepts the constructor of a hash algorithm and returns an HMAC function.
 
-	:param hashConstructor: hashing algorithm (e.g. hashlib.md5)
-	:return: hmac(str, key)
-	"""
-	def h(message, key):
-		return hmac.new(key=key.encode('utf8', 'ignore'), msg=message.encode('utf8', 'ignore'), digestmod=hashConstructor).hexdigest()
-	return h
+    :param hashConstructor: hashing algorithm (e.g. hashlib.md5)
+    :return: hmac(str, key)
+    """
+    def h(message, key):
+        return hmac.new(key=key.encode('utf8', 'ignore'), msg=message.encode('utf8', 'ignore'), digestmod=hashConstructor).hexdigest()
+    return h
+
 
 hashFunctions = {
-	'md5': hashlib.md5,
-	'sha1': hashlib.sha1,
-	'sha224': hashlib.sha224,
-	'sha256': hashlib.sha256,
-	'sha384': hashlib.sha384,
-	'sha512': hashlib.sha512,
+    'md5': hashlib.md5,
+    'sha1': hashlib.sha1,
+    'sha224': hashlib.sha224,
+    'sha256': hashlib.sha256,
+    'sha384': hashlib.sha384,
+    'sha512': hashlib.sha512,
 }
 
 for name in hashFunctions:
-	function = hashFunctions[name]
-	functions[name] = hashFunction(function)
+    function = hashFunctions[name]
+    functions[name] = hashFunction(function)
 
-	functions['hmac_%s' % name] = hmacFunction(function)
+    functions['hmac_%s' % name] = hmacFunction(function)

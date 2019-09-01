@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #
@@ -19,24 +20,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-def extractPath(data, path):
-	"""
-	Indexes a JSON object with a period separated path.
 
-	:param data: dict
-	:param path: str
-	:return: a valid JSON value
-	"""
-	splitPath = path.split('.')
-	return extractSplitPath(data, splitPath)
+def extractPath(data, path):
+    """
+    Indexes a JSON object with a period separated path.
+
+    :param data: dict
+    :param path: str
+    :return: a valid JSON value
+    """
+    splitPath = path.split('.')
+    return extractSplitPath(data, splitPath)
+
 
 def extractSplitPath(data, splitPath):
-	"""
-	Indexes a JSON object with list of string keys as a path.
+    """
+    Indexes a JSON object with list of string keys as a path.
 
-	:param data: dict
-	:param path: [str]
-	:return: a valid JSON value
-	"""
-	nextData = data.get(splitPath[0])
-	return nextData if len(splitPath) <= 1 or nextData is None else extractSplitPath(nextData, splitPath[1:])
+    :param data: dict
+    :param path: [str]
+    :return: a valid JSON value
+    """
+    nextData = data.get(splitPath[0])
+    return nextData if len(splitPath) <= 1 or nextData is None else extractSplitPath(nextData, splitPath[1:])

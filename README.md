@@ -101,8 +101,9 @@ Converts the input value to a string.
 
 ### Bool
 
-#### `not`
-Inverts the boolean value.
+* not: Inverts the boolean value.
+* and: Both two values are True.
+* or: One of the values is True.
 
 ### Dictionary
 
@@ -132,14 +133,14 @@ Returns the number of times the element appears in the list.
 #### `first`
 Returns the first element of the list, or `null` if the list is empty.
 
-#### `init`
-Returns all of the elements of the list except the last one.
-
 #### `last`
 Returns the last element of the list, or `null` if the list is empty.
 
-#### `rest`
+#### `rm_first`
 Returns the rest of the list after the first element.
+
+#### `rm_last`
+Returns all of the elements of the list except the last one.
 
 #### `length`
 Returns the length of the list.
