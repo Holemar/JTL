@@ -26,10 +26,11 @@ TESTS="faa1 test1"
 
 for TEST in $TESTS
 do
-	echo "********** $TEST **********"
+    echo "********** $TEST **********"
 
-	INPUT=tests/$TEST.json
-	OUTPUT=tests/$TEST.result
+    INPUT=tests/$TEST.json
+    OUTPUT=tests/$TEST.result
 
-	diff $OUTPUT <(cat $INPUT | ./JTL/__init__.py -t tests/$TEST.jtl)
+    # diff $OUTPUT <(cat $INPUT | ./JTL/__init__.py -t tests/$TEST.jtl)
+    python3 ./JTL/__init__.py -t tests/$TEST.jtl -s tests/$TEST.json -r tests/$TEST.result
 done

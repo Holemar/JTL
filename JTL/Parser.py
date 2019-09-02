@@ -20,10 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import json
 import shlex
 
 from JTL import Utility
+from JTL import json_util
 
 
 def parseTransform(transform):
@@ -62,23 +62,11 @@ def parseArgument(argument, data):
     :param data: dict of original data to extract more fields from
     :return: a valid JSON value
     """
-    try:
-        # Try loading as a constrant first
-        # TODO: strings are awkward and require escaping, so figure that out
-        return json.loads(argument)
-    except ValueError as e:
-        pass
-
-    # Maybe that's a python value
-    try:
-        # fix json works: true, false, null ...
-        true = True
-        false = False
-        null = None
-        return eval(argument)
-    except Exception as e:
-        pass
-
+    # Try loading as a constrant first
+    # TODO: strings are awkward and require escaping, so figure that out
+    value = json_util.load_json(argument)
+    if value is not None:
+        return value
     # If that fails, it might be a name
     return Utility.extractPath(data, argument)
 

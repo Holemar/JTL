@@ -1,116 +1,80 @@
-#!python
 # -*- coding:utf-8 -*-
 """
-类型转换函数
+change type
 """
-import os
+
 import time
 import datetime
-from JTL.Interpreter import transformJson
-from . import json_util
+from JTL import Interpreter
+from JTL import json_util
 
 __all__ = ('enum_change', 'enum_change', 'enum_file_change', 'date_2_str', 'datetime_2_str', 'concat', 'get_list',
            'get_any', 'jtl_change')
 
-# 大json形式的枚举，缓存起它的值
+# enum file json cache
 BIG_ENUM_JSON = {}
 
 
-def enum_file_change(value, file_name):
-    """枚举值转换
-    :param value: 枚举的key
-    :param file_name: 枚举映射表路径(要求是json文件,且放在项目下的 trans_json 目录)
-    :return: 映射表里对应的值
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "marital_status",
-            "external_field": "marital_status",
-            "description": "婚姻状态",
-            "to_bello_fun": "enum_file_change",
-            "to_bello_param": {"file_name": "example_enum.json"},
-            "to_external_fun": "enum_change",
-            "to_external_param": {"未婚": "0", "已婚": "1", "离异": "2"}
-        } );
-    json配置范例:
-        {"marital_status": {
-            "_source_col_name": "marital_status",
-            "_type_change": "enum_file_change",
-            "file_name": "example_enum.json"
-        }}
+def enum_file_change(key, file_name):
+    """big enum json load by a file
+    :param key: key of enum json
+    :param file_name: the file of enum json
+    :return: value of enum json
     """
     global BIG_ENUM_JSON
     if file_name in BIG_ENUM_JSON:
         enum_dict = BIG_ENUM_JSON.get(file_name)
     else:
-        if file_name.startswith('/'):
-            file_path = file_name
-        else:
-            file_path = os.path.join(os.getcwd(), file_name)
-        enum_dict = json_util.load_json_file(file_path)
+        enum_dict = json_util.load_json_file(file_name)
         assert isinstance(enum_dict, dict)
         BIG_ENUM_JSON[file_name] = enum_dict
 
-    if value in enum_dict:
-        return enum_dict.get(value)
-    if isinstance(value, str):
-        if value.isdigit():
-            tem_value = int(value)
+    if key in enum_dict:
+        return enum_dict.get(key)
+
+    if isinstance(key, str):
+        if key.isdigit():
+            tem_value = int(key)
             if tem_value in enum_dict:
                 target = enum_dict.get(tem_value)
-                enum_dict[value] = target
+                enum_dict[key] = target
                 return target
     else:
-        tem_value = str(value)
+        tem_value = str(key)
         if tem_value in enum_dict:
             target = enum_dict.get(tem_value)
-            enum_dict[value] = target
+            enum_dict[key] = target
             return target
-    if value in enum_dict.values():
-        enum_dict[value] = value
-        return value
-    enum_dict[value] = None
+
+    if key in enum_dict.values():
+        enum_dict[key] = key
+        return key
+
+    enum_dict[key] = None
     return None
 
 
-def enum_change(value, enum_dict):
-    """枚举值转换
-    :param value: 枚举的key
-    :param enum_dict: 枚举映射表
-    :return: 映射表里对应的值
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "huawei",
-            "bello_field": "gender",
-            "external_field": "TITLE",
-            "description": "性别",
-            "to_bello_fun": "enum_change",
-            "to_bello_param": {"enum_dict": {"F": "女", "M": "男"}},
-            "to_external_fun": "enum_change",
-            "to_external_param": {"enum_dict": {"女": "F", "男": "M"}}
-        } );
-    json配置范例:
-        {"degree": {
-            "_source_col_name": "education",
-            "_type_change": "enum_change",
-            "enum_dict": {"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}
-        }}
+def enum_change(key, enum_dict):
+    """get the value of enum
+    :param key: key of enum json
+    :param enum_dict: enum json
+    :return: value of enum json
     """
-    if value in enum_dict:
-        return enum_dict.get(value)
-    if isinstance(value, str):
-        if value.isdigit():
-            tem_value = int(value)
+    if key in enum_dict:
+        return enum_dict.get(key)
+
+    if isinstance(key, str):
+        if key.isdigit():
+            tem_value = int(key)
             if tem_value in enum_dict:
                 return enum_dict.get(tem_value)
     else:
-        tem_value = str(value)
+        tem_value = str(key)
         if tem_value in enum_dict:
             return enum_dict.get(tem_value)
-    if value in enum_dict.values():
-        return value
+
+    if key in enum_dict.values():
+        return key
     return None
 
 
@@ -387,7 +351,7 @@ def jtl_change(data, config_json):
             transform_data[k] = v
 
     if isinstance(data, dict):
-        return transformJson(data, transform_data)
+        return Interpreter.transformJson(data, transform_data)
     elif isinstance(data, (tuple, list)):
         return [jtl_change(d, transform_data) for d in data]
     return data

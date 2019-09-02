@@ -1,7 +1,7 @@
 {
     "tempF": "weather.temp $ words $ first $ toFloat",
-    "tempC": "weather.temp $ words $ 2 $ rm_first $ toFloat",
-    "tempCFloor": "weather.temp $ words $ 2 $ rm_first $ toFloat $ floor",
-    "tempCPlusOne": "weather.temp $ words $ 2 $ rm_first $ toFloat $ + 1.0",
+    "tempC": "weather.temp $ words $ 2 $ rmFirst $ toFloat",
+    "tempCFloor": "weather.temp $ words $ 2 $ rmFirst $ toFloat $ floor",
+    "tempCPlusOne": "weather.temp $ words $ 2 $ rmFirst $ toFloat $ + 1.0",
     "emptyPlusOne": "asdf $ + 1.0"
 }

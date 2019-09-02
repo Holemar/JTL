@@ -3,6 +3,7 @@
 json Utility
 """
 import os
+import sys
 import json
 import uuid
 import time
@@ -10,19 +11,37 @@ import datetime
 import logging
 import decimal
 
+BASE_PATH = os.getcwd()
+CODING_LIST = ('utf8', 'unicode-escape', sys.getdefaultencoding(), 'gbk', 'big5')
+
 
 def decode2str(content):
     """change bytes to str"""
-    if not content:
+    if content is None:
         return None
     if isinstance(content, bytes):
-        for encoding in ('utf-8', 'gbk', 'big5', sys.getdefaultencoding(), 'unicode-escape'):
+        for encoding in CODING_LIST:
             try:
                 return content.decode(encoding)
             except UnicodeDecodeError as e:
                 pass
         # If that fails, ignore error messages
         content = content.decode("utf8", "ignore")
+    return content
+
+
+def encode2bytes(content):
+    """change str to bytes"""
+    if content is None:
+        return None
+    if isinstance(content, str):
+        for encoding in CODING_LIST:
+            try:
+                return content.encode(encoding)
+            except UnicodeEncodeError as e:
+                pass
+        # If that fails, ignore error messages
+        content = content.encode('utf8', 'ignore')
     return content
 
 
@@ -62,8 +81,14 @@ def load_json_file(file_path):
     :param file_path: file path
     :return: json dict
     """
-    if not os.path.exists(file_path):
-        return None
+    if not os.path.isfile(file_path):
+        if file_path.startswith('/'):
+            return None
+        else:
+            file_path = os.path.join(BASE_PATH, file_path)
+            if not os.path.isfile(file_path):
+                return None
+
     with open(file_path, 'r', encoding='utf-8') as load_f:
         value = load_f.read()
         return load_json(value)
@@ -94,35 +119,33 @@ def json_serializable(value):
         return float(value)
     elif isinstance(value, uuid.UUID):
         return value.hex
-    # list,tuple,set 类型,递归转换
+    # list,tuple,set recursion
     elif isinstance(value, (list, tuple, set)):
         arr = [json_serializable(item) for item in value]
         return arr
-    # dict 类型,递归转换(字典里面的 key 也会转成 unicode 编码)
+    # dict recursion(the key in dict will change to str too)
     elif isinstance(value, dict):
-        this_value = {}  # 不能改变原参数
+        this_value = {}  # do not change the type
         for key1, value1 in value.items():
-            # 字典里面的 key 也转成 unicode 编码
             key1 = json_serializable(key1)
             this_value[key1] = json_serializable(value1)
         return this_value
-    # 其它类型
     else:
         return str(value)
 
 
 def dump_json_file(json_value, file_path):
     """
-    将json内容写入到文件
-    :param json_value: json内容
-    :param file_path: 文件路径
-    :return: 写入是否成功
+    write json content to a file
+    :param json_value: json content
+    :param file_path: str
+    :return: True if write success, else False
     """
     try:
         json_value = json_serializable(json_value)
         with open(file_path, 'w', encoding='utf-8') as dump_file:
             json.dump(json_value, dump_file, indent=1, ensure_ascii=False)
     except Exception as e:
-        logging.error('写入son文件异常:%s', e, exc_info=True)
+        logging.error('write a json file error:%s', e, exc_info=True)
     return True
 

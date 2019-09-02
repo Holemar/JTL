@@ -88,7 +88,7 @@ def transform(data, transformData, location=''):
 
     for n, section in enumerate(tokens[1:]):
         if len(section) == 0:
-            #n is the previous token
+            # n is the previous token
             raise SyntaxError('missing final operation after  %s  in "%s"' % (tokens[n][0], location))
 
         operation = section[0]

@@ -1,9 +1,8 @@
-#!python
 # -*- coding:utf-8 -*-
+"""
+type_change unittest
+"""
 
-"""
-类型转换函数的测试类
-"""
 import time
 import datetime
 import unittest

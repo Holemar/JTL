@@ -24,6 +24,7 @@ import argparse
 import json
 import sys
 
+
 def main():
     """
     Runs the main JTL program.
@@ -31,47 +32,49 @@ def main():
     :return: int
     """
 
-    #Parse arguments
+    # Parse arguments
     parser = argparse.ArgumentParser(description='JSON Transformation Language')
     parser.add_argument('-i', '--indent', default=4, type=int, help='Indentation amount.')
     parser.add_argument('-t', '--transform-file', help='The name of the JSON file containing the transformation to run.')
     parser.add_argument('-s', '--source-file', help='The name of the JSON file containing the source data to run.')
+    parser.add_argument('-r', '--result-file', help='The name of the JSON file containing the result data of run.')
     parser.add_argument('transform', nargs='?', help='The transformation to run.')
     arguments = parser.parse_args(sys.argv[1:])
 
-    #Load the transformation
+    sys.path.append('.')
+    import Interpreter, json_util
+
+    # Load the transformation
     if arguments.transform is None and arguments.transform_file is not None:
-        #From a file
-        with open(arguments.transform_file, 'r') as f:
-            transformStr = f.read()
+        # From a file
+        transform_data = json_util.load_json_file(arguments.transform_file)
     elif arguments.transform is not None and arguments.transform_file is None:
-        #From the command line
-        transformStr = arguments.transform
+        # From the command line
+        transform_data = json_util.load_json(arguments.transform)
     else:
         print('ERROR: Specify either a transform file or a transform')
         return 1
 
-    transformData = json.loads(transformStr)
-
-    #Read the JSON in from stdin
-    #TODO: error handling
+    # Read the JSON in from stdin
+    data = None
     if arguments.source_file:
-        with open(arguments.source_file, 'r') as f:
-            data = f.read()
+        data = json_util.load_json_file(arguments.source_file)
     if not data:
-        data = sys.stdin.read()
-    data = json.loads(data)
+        data = json_util.load_json(sys.stdin.read())
 
-    #Transform the JSON
-    #TODO: cleaner way to do this
-    sys.path.append('.')
-    import Interpreter
-    result = Interpreter.transformJson(data, transformData)
+    # Transform the JSON
+    # TODO: cleaner way to do this
+    result = Interpreter.transformJson(data, transform_data)
 
-    #Output the result
-    print(json.dumps(result, indent=arguments.indent, sort_keys=True))
+    # Output the result
+    if arguments.result_file:
+        file_result = json_util.load_json_file(arguments.result_file)
+        assert result == file_result
+    else:
+        print(json.dumps(result, indent=arguments.indent, sort_keys=True))
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())

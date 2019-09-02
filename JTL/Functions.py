@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import sys
 import binascii
 import hashlib
 import hmac
@@ -28,6 +27,7 @@ import math
 import uuid
 import time
 import datetime
+from JTL import json_util
 
 # ######### Basic Functions ##########
 
@@ -90,13 +90,7 @@ def to_string(data):
         return data.hex
     # bytes
     if isinstance(data, bytes):
-        for encoding in ('utf-8', 'gbk', 'big5', sys.getdefaultencoding(), 'unicode-escape'):
-            try:
-                return data.decode(encoding)
-            except UnicodeDecodeError as e:
-                pass
-        # If that fails, ignore error messages
-        return data.decode("utf8", "ignore")
+        return json_util.decode2str(data)
     return str(data)
 
 
@@ -108,6 +102,10 @@ functions = {
     'toInt': to_int,
     'toNumber': to_number,
 
+    # Bool
+    'and': lambda *args: all(args),
+    'or': lambda *args: any(args),
+
     # None
     'isNull': lambda x: x is None,
 
@@ -117,8 +115,10 @@ functions = {
     # Sequence
     'first': lambda s: s[0] if s is not None and len(s) >= 1 else None,
     'last': lambda s: s[-1] if s is not None and len(s) >= 1 else None,
-    'rm_first': lambda s: s[1:] if s is not None and len(s) >= 1 else [],
-    'rm_last': lambda s: s[:-1] if s is not None and len(s) >= 1 else [],
+    'rmFirst': lambda s: s[1:] if s is not None and len(s) >= 1 else [],
+    'rmLast': lambda s: s[:-1] if s is not None and len(s) >= 1 else [],
+    'list': lambda x, *args: list(args),  # not include first element
+    'rmNull': lambda *args: [a for a in args if a is not None],
 
     # String
     'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(s) if s is not None else None,
@@ -127,7 +127,7 @@ functions = {
 
 # ######### Maybe Functions ##########
 
-# Functions in here handle null like the Option type
+# Functions in here handle null like the Option type, if null in args return null
 def maybe(f):
     return lambda *args: f(*args) if None not in args else None
 
@@ -136,8 +136,6 @@ def maybe(f):
 maybeFunctions = {
     # Bool
     'not': lambda x: not x,
-    'and': lambda x, y: bool(x and y),
-    'or': lambda x, y:  bool(x or y),
 
     # Dict
     'keys': lambda d: list(d.keys()),
@@ -185,7 +183,6 @@ maybeFunctions = {
     'sorted': sorted,
     'sum': sum,
     'unique': lambda s: list(set(s)),
-    'list': lambda x, *args: list(args),
 
     # String
     'lower': lambda s: s.lower(),
@@ -225,8 +222,8 @@ def hashFunction(hashConstructor):
     """
     def f(s):
         h = hashConstructor()
-        h.update(s.encode('utf8', 'ignore'))
-        return binascii.hexlify(h.digest()).decode('utf8')
+        h.update(json_util.encode2bytes(s))
+        return binascii.hexlify(json_util.decode2str(h.digest()))
     return f
 
 
@@ -238,7 +235,9 @@ def hmacFunction(hashConstructor):
     :return: hmac(str, key)
     """
     def h(message, key):
-        return hmac.new(key=key.encode('utf8', 'ignore'), msg=message.encode('utf8', 'ignore'), digestmod=hashConstructor).hexdigest()
+        key = json_util.encode2bytes(key)
+        msg = json_util.encode2bytes(message)
+        return hmac.new(key=key, msg=msg, digestmod=hashConstructor).hexdigest()
     return h
 
 

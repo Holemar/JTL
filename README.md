@@ -136,10 +136,10 @@ Returns the first element of the list, or `null` if the list is empty.
 #### `last`
 Returns the last element of the list, or `null` if the list is empty.
 
-#### `rm_first`
+#### `rmFirst`
 Returns the rest of the list after the first element.
 
-#### `rm_last`
+#### `rmLast`
 Returns all of the elements of the list except the last one.
 
 #### `length`

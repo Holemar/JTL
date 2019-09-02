@@ -1,3 +1,7 @@
+# -*- coding:utf-8 -*-
+"""
+Utility unittest
+"""
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #
@@ -22,6 +26,7 @@
 import unittest
 
 from JTL import Utility
+
 
 class UtilityTest(unittest.TestCase):
 

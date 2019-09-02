@@ -1,3 +1,7 @@
+# -*- coding:utf-8 -*-
+"""
+Functions unittest
+"""
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #
@@ -22,6 +26,7 @@
 import unittest
 
 from JTL import Functions
+
 
 class FunctionsTest(unittest.TestCase):
 
