@@ -15,6 +15,41 @@ from JTL import json_util
 
 class TestJsonUtil(unittest.TestCase):
 
+    def test_enum_file_change(self):
+        """enum_file_change test"""
+        file_name = 'tests/example_enum.json'
+
+        self.assertEqual(json_util.enum_file_change('2', file_name), '离异')
+        self.assertEqual(len(json_util.BIG_ENUM_JSON), 1)
+        enum_dict = json_util.BIG_ENUM_JSON.get(file_name)
+        self.assertEqual(enum_dict.get(1), None)
+
+        self.assertEqual(json_util.enum_file_change(1, file_name), '已婚')
+        self.assertEqual(len(json_util.BIG_ENUM_JSON), 1)
+        enum_dict2 = json_util.BIG_ENUM_JSON.get(file_name)
+        self.assertEqual(id(enum_dict), id(enum_dict2))
+        self.assertEqual(enum_dict2.get(1), '已婚')
+
+        self.assertEqual(enum_dict.get("未婚"), None)
+        self.assertEqual(json_util.enum_file_change("未婚", file_name), "未婚")
+        enum_dict2 = json_util.BIG_ENUM_JSON.get(file_name)
+        self.assertEqual(id(enum_dict), id(enum_dict2))
+        self.assertEqual(enum_dict2.get("未婚"), "未婚")
+
+        self.assertEqual(json_util.enum_file_change("4", file_name), "丧偶")
+        self.assertEqual(json_util.enum_file_change(5, file_name), None)
+        self.assertEqual(json_util.enum_file_change('10', file_name), None)
+
+    def test_enum_change(self):
+        """enum_change tests"""
+        self.assertEqual(json_util.enum_change(1, {1: '一', 2: '二', 3: '三'}), '一')
+        self.assertEqual(json_util.enum_change('3', {1: '一', 2: '二', 3: '三'}), '三')
+        self.assertEqual(json_util.enum_change(1, {'1': '一', '2': '二', '3': '三'}), '一')
+        self.assertEqual(json_util.enum_change('2', {'1': '一', '2': '二', '3': '三'}), '二')
+        self.assertEqual(json_util.enum_change('二', {1: '一', 2: '二', 3: '三'}), '二')
+        self.assertEqual(json_util.enum_change(5, {'1': '一', '2': '二', '3': '三'}), None)
+        self.assertEqual(json_util.enum_change('10', {'1': '一', '2': '二', '3': '三'}), None)
+
     def test_load_json(self):
         """load_json test"""
         self.assertEqual(json_util.load_json('{"哈":11.2, "aa":[1,"2",3]}'), {u"哈": 11.2, "aa": [1, "2", 3]})

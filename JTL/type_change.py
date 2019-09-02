@@ -5,84 +5,17 @@ change type
 
 import time
 import datetime
-from JTL import Interpreter
-from JTL import json_util
+from JTL import Interpreter, time_util
 
-__all__ = ('enum_change', 'enum_change', 'enum_file_change', 'date_2_str', 'datetime_2_str', 'concat', 'get_list',
-           'get_any', 'jtl_change')
-
-# enum file json cache
-BIG_ENUM_JSON = {}
+__all__ = ('date_2_str', 'datetime_2_str', 'jtl_change')
 
 
-def enum_file_change(key, file_name):
-    """big enum json load by a file
-    :param key: key of enum json
-    :param file_name: the file of enum json
-    :return: value of enum json
-    """
-    global BIG_ENUM_JSON
-    if file_name in BIG_ENUM_JSON:
-        enum_dict = BIG_ENUM_JSON.get(file_name)
-    else:
-        enum_dict = json_util.load_json_file(file_name)
-        assert isinstance(enum_dict, dict)
-        BIG_ENUM_JSON[file_name] = enum_dict
-
-    if key in enum_dict:
-        return enum_dict.get(key)
-
-    if isinstance(key, str):
-        if key.isdigit():
-            tem_value = int(key)
-            if tem_value in enum_dict:
-                target = enum_dict.get(tem_value)
-                enum_dict[key] = target
-                return target
-    else:
-        tem_value = str(key)
-        if tem_value in enum_dict:
-            target = enum_dict.get(tem_value)
-            enum_dict[key] = target
-            return target
-
-    if key in enum_dict.values():
-        enum_dict[key] = key
-        return key
-
-    enum_dict[key] = None
-    return None
-
-
-def enum_change(key, enum_dict):
-    """get the value of enum
-    :param key: key of enum json
-    :param enum_dict: enum json
-    :return: value of enum json
-    """
-    if key in enum_dict:
-        return enum_dict.get(key)
-
-    if isinstance(key, str):
-        if key.isdigit():
-            tem_value = int(key)
-            if tem_value in enum_dict:
-                return enum_dict.get(tem_value)
-    else:
-        tem_value = str(key)
-        if tem_value in enum_dict:
-            return enum_dict.get(tem_value)
-
-    if key in enum_dict.values():
-        return key
-    return None
-
-
-def date_2_str(value, format_str='%Y-%m-%d'):
+def date_2_str(value, format_str='%Y-%m-%d', default_now=False):
     """
     将日期格式化成字符串
-    :param {time|datetime.datetime|datetime.date|int|float} value: 原时间(为空则默认为当前时间；纯数值则认为是时间戳,单位:秒)
+    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
     :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%d)
+    :param {string} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
     :return {string}: 格式化后的时间字符串
 
     数据库配置范例:
@@ -109,29 +42,16 @@ def date_2_str(value, format_str='%Y-%m-%d'):
           "end_date": "end_date $ toString"  # 日期转字符串，如果是默认格式可以直接用 toString 函数，它会根据 datetime.datetime 及 datetime.date 类型来判断格式
         }
     """
-    if value in (None, ''):
-        return None
-
     format_str = format_str or '%Y-%m-%d'
-    # datetime, datetime.date
-    if isinstance(value, (datetime.datetime, datetime.date)):
-        return value.strftime(format_str)
-    # time
-    elif isinstance(value, time.struct_time):
-        return time.strftime(format_str, value)
-    # 纯数值类型, 先类型转换
-    elif isinstance(value, (int, float)):
-        value = datetime.datetime.fromtimestamp(value)
-        return value.strftime(format_str)
-    # 其它类型,无法格式化
-    return None
+    return time_util.to_string(value, format_str, default_now=default_now)
 
 
-def datetime_2_str(value, format_str='%Y-%m-%dT%H:%M:%S'):
+def datetime_2_str(value, format_str='%Y-%m-%dT%H:%M:%S', default_now=False):
     """
     将日期格式化成字符串
-    :param {time|datetime.datetime|datetime.date|int|float} value: 原时间(为空则默认为当前时间；纯数值则认为是时间戳,单位:秒)
+    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
     :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%dT%H:%M:%S)
+    :param {string} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
     :return {string}: 格式化后的时间字符串
 
     数据库配置范例:
@@ -159,118 +79,77 @@ def datetime_2_str(value, format_str='%Y-%m-%dT%H:%M:%S'):
         }
     """
     format_str = format_str or '%Y-%m-%dT%H:%M:%S'
-    return date_2_str(value, format_str=format_str)
+    return date_2_str(value, format_str=format_str, default_now=default_now)
 
 
-def concat(data, source_cols=None, separator=''):
+def to_date(value, default_now=False):
     """
-    合并多个字段值
-    :param {dict} data: 数据源
-    :param {list} source_cols: 要合并的字段名列表(是数据源的字段名，而不是转换后的字段名)
-    :param {str} separator: 分隔符
-    :return: 合并后的字符串
+    将 字符串或者其它类型的时间 转成 datetime.date 类型
+    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
+    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%d)
+    :param {bool} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
+    :return {datetime.date}: 对应的日期
 
     数据库配置范例:
         db.getCollection("trans_fields").insert( {
             "external_name": "shunfeng",
-            "bello_field": "skill_category",
-            "external_field": "*", // 由于需要读取多个字段，所以没法指定具体某个字段名，这里必须填 "*"
-            "description": "技能",
-            "to_bello_fun": "concat",
-            "to_bello_param": {"source_cols": ["skill_type", "compet_level", "time_use"], "separator": "-"},
-            "to_external_fun": null,
-            "to_external_param": null
+            "bello_field": "birthday",
+            "external_field": "birthday",
+            "description": "生日",
+            "to_bello_fun": "date_2_str",
+            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
+            "to_external_fun": "to_date",
+            "to_external_param": {"format_str": "%Y-%m-%d", "default_now": true}
         } );
     json配置范例:
-        {"skill_category": {
-                "_source_col_name": "*",
-                "_type_change": "concat",
-                "source_cols": ['skill_type', 'compet_level', 'time_use'],
-                'separator': '-'
-            }
+        {"birthday": {
+            "_source_col_name": "birthday",
+            "_type_change": "to_date",
+            "format_str": "%Y/%m/%d",
+            "default_now": True
+          },
+          "start_date": {
+            "_source_col_name": "start_date",
+            "_type_change": "to_date",  # 参数跟默认值一样的话可以不写参数
+          }
         }
     """
-    if data is None:
-        return None
-    if not source_cols:
-        return ''
-
-    assert isinstance(source_cols, (list, tuple))
-    results = [str(data.get(i, '') or '') for i in source_cols]
-    return separator.join(results)
+    return time_util.to_date(value, default_now=default_now)
 
 
-def get_list(data, source_cols=None):
+def to_datetime(value, default_now=False):
     """
-    获取多个字段值，且以list形式返回
-    (几乎是专门为我们简历model的 expected_locations(期望工作地点) 字段而写，因为它的类型是 ListField(StringField()) )
-    :param {dict} data: 数据源
-    :param {list} source_cols: 要获取的字段名列表(是数据源的字段名，而不是转换后的字段名)
-    :return: 合并后的字符串
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "huawei",
-            "bello_field": "expected_locations",
-            "external_field": "*", // 由于需要读取多个字段，所以没法指定具体某个字段名，这里必须填 "*"
-            "description": "期望工作地点",
-            "to_bello_fun": "get_list",
-            "to_bello_param": {"source_cols": ["INTENTION_PLACE", "INTENTION_PLACE_ONE", "INTENTION_PLACE_TWO"]}
-        } );
-    json配置范例:
-        {"expected_locations": {
-                "_source_col_name": "*",
-                "_type_change": "get_list",
-                "source_cols": ["INTENTION_PLACE", "INTENTION_PLACE_ONE", "INTENTION_PLACE_TWO"]
-            }
-        }
-    """
-    if data is None:
-        return None
-    if not source_cols:
-        return []
-
-    assert isinstance(source_cols, (list, tuple))
-    return [data.get(i) for i in source_cols if data.get(i) is not None]
-
-
-def get_any(data, source_cols=None):
-    """
-    在多个字段中，获取有值的任意一个，按字段列表的优先顺序取
-    :param {dict} data: 数据源
-    :param {list} source_cols: 要获取的字段名列表(是数据源的字段名，而不是转换后的字段名)
-    :return: 对应字段的值,取不到时返回 None
+    将 字符串或者其它类型的时间 转成 datetime.datetime 类型
+    :param {time|datetime.datetime|datetime.date|int|float} value: 原时间(纯数值则认为是时间戳,单位:秒)
+    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%dT%H:%M:%S)
+    :param {bool} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
+    :return {string}: 格式化后的时间字符串
 
     数据库配置范例:
         db.getCollection("trans_fields").insert( {
             "external_name": "shunfeng",
-            "bello_field": "skill_category",
-            "external_field": "*", // 由于需要读取多个字段，所以没法指定具体某个字段名，这里必须填 "*"
-            "description": "技能",
-            "to_bello_fun": "get_any",
-            "to_bello_param": {"source_cols": ["skill_type", "compet_level", "time_use"]},
-            "to_external_fun": null,
-            "to_external_param": null
+            "bello_field": "end_date",
+            "external_field": "end_date",
+            "description": "结束时间",
+            "to_bello_fun": "to_datetime",
+            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
+            "to_external_fun": "to_datetime",
+            "to_external_param": {"format_str": "%Y-%m-%d %H:%M:%S", "default_now": true}
         } );
     json配置范例:
-        {"skill_category": {
-                "_source_col_name": "*",
-                "_type_change": "get_any",
-                "source_cols": ['skill_type', 'compet_level', 'time_use']
-            }
+        {"birthday": {
+            "_source_col_name": "birthday",
+            "_type_change": "to_datetime",
+            "format_str": "%Y/%m/%d %H:%M:%S",
+            "default_now": True
+          },
+          "start_date": {
+            "_source_col_name": "start_date",
+            "_type_change": "to_datetime",  # 参数跟默认值一样的话可以不写参数
+          }
         }
     """
-    if data is None:
-        return None
-    if not source_cols:
-        return ''
-
-    assert isinstance(source_cols, (list, tuple))
-    for i in source_cols:
-        value = data.get(i)
-        if value is not None:
-            return value
-    return None
+    return time_util.to_datetime(value, default_now=default_now)
 
 
 def jtl_change(data, config_json):

@@ -29,6 +29,7 @@ import time
 import datetime
 from JTL import json_util
 
+
 # ######### Basic Functions ##########
 
 
@@ -118,10 +119,11 @@ functions = {
     'rmFirst': lambda s: s[1:] if s is not None and len(s) >= 1 else [],
     'rmLast': lambda s: s[:-1] if s is not None and len(s) >= 1 else [],
     'list': lambda x, *args: list(args),  # not include first element
-    'rmNull': lambda *args: [a for a in args if a is not None],
+    'rmNull': lambda args: [a for a in args if a is not None],
 
     # String
-    'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(s) if s is not None else None,
+    'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(
+        [to_string(t) for t in s if t is not None]) if isinstance(s, (tuple, list)) else None,
 }
 
 
@@ -140,8 +142,10 @@ maybeFunctions = {
     # Dict
     'keys': lambda d: list(d.keys()),
     'values': lambda d: list(d.values()),
+    'enum_change': json_util.enum_change,
+    'enum_file_change': json_util.enum_file_change,
 
-    # Numer
+    # Number
     '+': lambda x, y: x + y,
     '-': lambda x, y: x - y,
     '*': lambda x, y: x * y,
@@ -220,10 +224,12 @@ def hashFunction(hashConstructor):
     :param hashConstructor: hashing algorithm (e.g. hashlib.md5)
     :return: f(str)
     """
+
     def f(s):
         h = hashConstructor()
         h.update(json_util.encode2bytes(s))
         return binascii.hexlify(json_util.decode2str(h.digest()))
+
     return f
 
 
@@ -234,10 +240,12 @@ def hmacFunction(hashConstructor):
     :param hashConstructor: hashing algorithm (e.g. hashlib.md5)
     :return: hmac(str, key)
     """
+
     def h(message, key):
         key = json_util.encode2bytes(key)
         msg = json_util.encode2bytes(message)
         return hmac.new(key=key, msg=msg, digestmod=hashConstructor).hexdigest()
+
     return h
 
 
@@ -253,5 +261,4 @@ hashFunctions = {
 for name in hashFunctions:
     function = hashFunctions[name]
     functions[name] = hashFunction(function)
-
     functions['hmac_%s' % name] = hmacFunction(function)

@@ -11,8 +11,14 @@ import datetime
 import logging
 import decimal
 
+# base file path, for found files
 BASE_PATH = os.getcwd()
+
+# string encoding, try to encode str or decode bytes by this list
 CODING_LIST = ('utf8', 'unicode-escape', sys.getdefaultencoding(), 'gbk', 'big5')
+
+# enum file json cache
+BIG_ENUM_JSON = {}
 
 
 def decode2str(content):
@@ -43,6 +49,73 @@ def encode2bytes(content):
         # If that fails, ignore error messages
         content = content.encode('utf8', 'ignore')
     return content
+
+
+def enum_file_change(key, file_name):
+    """big enum json load by a file
+    :param key: key of enum json
+    :param file_name: the file of enum json
+    :return: value of enum json
+    """
+    global BIG_ENUM_JSON
+    if file_name in BIG_ENUM_JSON:
+        enum_dict = BIG_ENUM_JSON.get(file_name)
+    else:
+        enum_dict = load_json_file(file_name)
+        assert isinstance(enum_dict, dict)
+        BIG_ENUM_JSON[file_name] = enum_dict
+
+    if key in enum_dict:
+        return enum_dict.get(key)
+
+    if isinstance(key, str):
+        if key.isdigit():
+            tem_value = int(key)
+            if tem_value in enum_dict:
+                target = enum_dict.get(tem_value)
+                enum_dict[key] = target
+                return target
+    else:
+        tem_value = str(key)
+        if tem_value in enum_dict:
+            target = enum_dict.get(tem_value)
+            enum_dict[key] = target
+            return target
+
+    if key in enum_dict.values():
+        enum_dict[key] = key
+        return key
+
+    enum_dict[key] = None
+    return None
+
+
+def enum_change(key, enum_dict):
+    """get the value of enum
+    :param key: key of enum json
+    :param enum_dict: enum json
+    :return: value of enum json
+    """
+    if isinstance(enum_dict, str):
+        enum_dict = load_json(enum_dict)
+        assert isinstance(enum_dict, dict)
+
+    if key in enum_dict:
+        return enum_dict.get(key)
+
+    if isinstance(key, str):
+        if key.isdigit():
+            tem_value = int(key)
+            if tem_value in enum_dict:
+                return enum_dict.get(tem_value)
+    else:
+        tem_value = str(key)
+        if tem_value in enum_dict:
+            return enum_dict.get(tem_value)
+
+    if key in enum_dict.values():
+        return key
+    return None
 
 
 def load_json(value):
