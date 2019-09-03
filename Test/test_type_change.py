@@ -7,6 +7,7 @@ import time
 import datetime
 import unittest
 
+from JTL import Interpreter
 from JTL import type_change
 
 
@@ -40,6 +41,16 @@ class TestTypeChange(unittest.TestCase):
         self.assertEqual(type_change.datetime_2_str(time.time()), type_change.datetime_2_str(datetime.datetime.now()))
         self.assertEqual(type_change.datetime_2_str(test_date, format_str='%Y-%m-%d %H:%M:%S'), '2019-07-29 00:00:00')
         self.assertEqual(type_change.datetime_2_str(test_time, format_str='%Y-%m-%dT%H:%M:%S'), '2019-07-06T08:51:06')
+
+    def test_time_functions(self):
+        """all time functions test"""
+        data = {'t1': datetime.datetime(2019, 7, 6, 8, 51, 6), 's1': '2019-07-29 15:03:8'}
+        self.assertEqual(Interpreter.transform(data, 't1 $ toString'), '2019-07-06T08:51:06')
+        self.assertEqual(Interpreter.transform(data, 't1 $ dateToString'), '2019-07-06')
+        self.assertEqual(Interpreter.transform(data, 't1 $ datetimeToString'), '2019-07-06T08:51:06')
+        self.assertEqual(Interpreter.transform(data, 's1 $ toDate'), datetime.date(2019, 7, 29))
+        self.assertEqual(Interpreter.transform(data, 's1 $ toDatetime'), datetime.datetime(2019, 7, 29, 15, 3, 8))
+        self.assertEqual(Interpreter.transform(data, 's1 $ dateToString'), '2019-07-29')
 
     def test_jtl(self):
         """jtl综合转换(无内嵌层)"""

@@ -88,7 +88,7 @@ Returns the input value or `NaN` if the input is `null`.
 Returns true if the value is `null`.
 
 #### `toBool`
-Converts the input value to a boolean.
+Converts the input value to a `boolean`.
 
 #### `toFloat`
 Converts the input value to a float, returning `null` if it is not a valid number.
@@ -102,7 +102,7 @@ Converts the input value to a string.
 ### Bool
 
 * not: Inverts the boolean value.
-* and: Both two values are True.
+* and: All values are True.
 * or: One of the values is True.
 
 ### Dictionary
@@ -112,6 +112,12 @@ Returns the keys of the dictionary as a list.
 
 #### `values`
 Returns the values of the dictionary as a list.
+
+#### `enumChange`
+Returns the value of the enum.
+
+#### `enumFileChange`
+Returns the value of the enum. And the enum json load by a file.
 
 ### Hashing
 JTL supports a variety of cryptographic hash functions: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`. In addition, [HMAC's](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) are supported for each of these hash types (e.g. `hmac_md5`).
@@ -127,6 +133,9 @@ JTL supports a variety of cryptographic hash functions: `md5`, `sha1`, `sha224`,
 
 ### Sequence
 
+#### `index number`
+Returns the value by the index number the element appears in the list.
+
 #### `count <ELEMENT>`
 Returns the number of times the element appears in the list.
 
@@ -141,6 +150,12 @@ Returns the rest of the list after the first element.
 
 #### `rmLast`
 Returns all of the elements of the list except the last one.
+
+#### `rmNull`
+Returns all of the elements of the list except the `null` element.
+
+#### `list`
+Returns all of the parameter values as a list except the first value.
 
 #### `length`
 Returns the length of the list.
