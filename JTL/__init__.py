@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+# https://github.com/AgalmicVentures/JTL
+
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #

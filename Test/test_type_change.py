@@ -50,7 +50,7 @@ class TestTypeChange(unittest.TestCase):
             "phone": "mobile_phone",
             "personal_id": "id_number",
             "age": "age",
-            "gender": """gender $ enum_change '{"0": "女", "1": "男"}' """,
+            "gender": """gender $ enumChange '{"0": "女", "1": "男"}' """,
             "ethnicity": "nation",
             "nationality": "nationality",
             "year_of_work_experience": "work_year $ toInt",
@@ -60,12 +60,12 @@ class TestTypeChange(unittest.TestCase):
                 "format_str": "%Y/%m/%d"
             },
             "birthplace": "hometown",
-            "marital_status": "marital_status $ enum_file_change 'tests/example_enum.json' ",
+            "marital_status": "marital_status $ enumFileChange 'tests/example_enum.json' ",
             "update_dt": {
                 "_source_col_name": "update_dt",
                 "_type_change": "datetime_2_str",
             },
-            "update_dt2": "update_dt $ toString",  # 日期转字符串，如果是默认格式可以直接用 toString 函数
+            "update_dt2": "update_dt $ datetimeToString '%Y-%m-%dT%H:%M:%S' ",
             "summary": "description",
             "description2": '',  # 没有对应key，返回None
             'is_similar_check': False,  # 对应key不是字符串，原样返回
@@ -124,7 +124,7 @@ class TestTypeChange(unittest.TestCase):
                 "config_json": {
                     "school_name": "school_name",
                     "major": "major",
-                    "degree": """education $ enum_change '{"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}' """,
+                    "degree": """education $ enumChange '{"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}' """,
                     "start_date": {
                         "_source_col_name": "start_date",
                         "_type_change": "date_2_str"
@@ -201,11 +201,11 @@ class TestTypeChange(unittest.TestCase):
             # 第二层
             'educations': {
                 "_source_col_name": "educations2",
-                "_type_change": "list",
+                "_type_change": "jtl_change",
                 "config_json": {
                     "school_name": "school_name",
                     "major": "major",
-                    "degree": """education $ enum_change '{"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}' """,
+                    "degree": """education $ enumChange '{"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}' """,
                     "start_date": {
                         "_source_col_name": "start_date",
                         "_type_change": "date_2_str"
@@ -217,7 +217,7 @@ class TestTypeChange(unittest.TestCase):
                     # 第三层
                     'skills22': {
                         "_source_col_name": "skills11",
-                        "_type_change": "list",
+                        "_type_change": "jtl_change",
                         "config_json": {
                             "skill_category": "$ list skill_type compet_level time_use $ join '-' ",
                             "skill_name": "skill_type",
@@ -325,6 +325,7 @@ class TestTypeChange(unittest.TestCase):
                 'skill_level': '熟练'
             }]
         }
+        # print('*'*20)
         # print(type_change.jtl_change(db_data, config_json))
         # print(result)
         self.assertEqual(type_change.jtl_change(db_data, config_json), result)

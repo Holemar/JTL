@@ -78,14 +78,17 @@ def to_string(data):
     if data is None:
         return None
     # datetime
-    if isinstance(data, datetime.datetime):
+    elif isinstance(data, datetime.datetime):
         return data.strftime('%Y-%m-%dT%H:%M:%S')
     # date
     elif isinstance(data, datetime.date):
         return data.strftime('%Y-%m-%d')
     # time
     elif isinstance(data, time.struct_time):
-        return time.strftime('%Y/%m/%dT%H:%M:%S', data)
+        return time.strftime('%Y-%m-%dT%H:%M:%S', data)
+    # datetime.time
+    elif isinstance(data, datetime.time):
+        return data.strftime('%H:%M:%S')
     # uuid
     elif isinstance(data, uuid.UUID):
         return data.hex
@@ -142,8 +145,8 @@ maybeFunctions = {
     # Dict
     'keys': lambda d: list(d.keys()),
     'values': lambda d: list(d.values()),
-    'enum_change': json_util.enum_change,
-    'enum_file_change': json_util.enum_file_change,
+    'enumChange': json_util.enum_change,
+    'enumFileChange': json_util.enum_file_change,
 
     # Number
     '+': lambda x, y: x + y,

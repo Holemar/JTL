@@ -3,8 +3,6 @@
 import re
 import time
 import datetime
-import calendar
-import logging
 
 __all__ = ('to_string', 'to_time', 'to_datetime', 'to_date', 'to_timestamp', 'to_datetime_time',
            'datetime_time_to_str', 'is_dst')
@@ -12,20 +10,15 @@ __all__ = ('to_string', 'to_time', 'to_datetime', 'to_date', 'to_timestamp', 'to
 DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 DEFAULT_MONTH_FORMAT = '%Y-%m'
-
-CONFIG = {
-    'format_str': DEFAULT_FORMAT,
-
-    'format_list': (DEFAULT_FORMAT, '%Y-%m-%d %H:%M:%S.%f', DEFAULT_DATE_FORMAT, DEFAULT_MONTH_FORMAT,
-                    '%Y年%m月%d日 %H时%M分%S秒', '%Y年%m月%d日　%H时%M分%S秒', '%Y年%m月%d日 %H时%M分', '%Y年%m月%d日　%H时%M分',
-                    '%Y年%m月%d日 %H:%M:%S', '%Y年%m月%d日　%H:%M:%S', '%Y年%m月%d日 %H:%M', '%Y年%m月%d日　%H:%M', '%Y年%m月%d日',
-                    '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M:%S.%f', '%Y/%m/%d', '%Y%m%d', '%Y%m%d%H%M%S',
-                    '%Y/%m/%d %H:%M', '%Y-%m-%d %H:%M', "%Y-%m-%dT%H:%M",
-                    '%Y-%m-%d %p %I:%M:%S', '%Y-%m-%d %p %I:%M', '%Y/%m/%d %p %I:%M:%S', '%Y/%m/%d %p %I:%M',
-                    "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%S+08:00",
-                    "%Y-%m-%dT%H:%M:%S.%f+08:00",
-                    ),
-}
+DEFAULT_TIME_FORMAT = '%H:%M:%S'
+FORMAT_LIST = (DEFAULT_FORMAT, '%Y-%m-%d %H:%M:%S.%f', DEFAULT_DATE_FORMAT, DEFAULT_MONTH_FORMAT,
+               '%Y年%m月%d日 %H时%M分%S秒', '%Y年%m月%d日　%H时%M分%S秒', '%Y年%m月%d日 %H时%M分', '%Y年%m月%d日　%H时%M分',
+               '%Y年%m月%d日 %H:%M:%S', '%Y年%m月%d日　%H:%M:%S', '%Y年%m月%d日 %H:%M', '%Y年%m月%d日　%H:%M', '%Y年%m月%d日',
+               '%Y/%m/%d %H:%M:%S', '%Y/%m/%d %H:%M:%S.%f', '%Y/%m/%d', '%Y%m%d', '%Y%m%d%H%M%S',
+               '%Y/%m/%d %H:%M', '%Y-%m-%d %H:%M', "%Y-%m-%dT%H:%M",
+               '%Y-%m-%d %p %I:%M:%S', '%Y-%m-%d %p %I:%M', '%Y/%m/%d %p %I:%M:%S', '%Y/%m/%d %p %I:%M',
+               "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%S+08:00", "%Y-%m-%dT%H:%M:%S.%f+08:00",
+               )
 
 # fix py3
 try:
@@ -53,15 +46,14 @@ datetime_re = re.compile(
 def to_string(value=None, format_str=None, default_now=False):
     """
     change a time to str
-    :param {time|datetime.datetime|datetime.date|int|long|float} value: time
+    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
     :param {string} format_str: the return format of time. (default format: %Y-%m-%d %H:%M:%S)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
     :return {string}: the string time
     """
     this_format = format_str
     if this_format is None:
-        global CONFIG
-        this_format = CONFIG.get('format_str')
+        this_format = DEFAULT_FORMAT
 
     if value in (None, ''):
         if default_now is False:
@@ -91,15 +83,20 @@ def to_string(value=None, format_str=None, default_now=False):
     elif isinstance(value, datetime.timedelta):
         value = _timedelta_2_datetime(value)
         return value.strftime(this_format)
+    # datetime.time
+    elif isinstance(value, datetime.time):
+        if format_str is None:
+            this_format = DEFAULT_TIME_FORMAT
+        return value.strftime(this_format)
     return None
 
 
-def to_time(value=None, format_str=None, default_now=False):
+def to_time(value=None, default_now=False, from_format=None):
     """
     change other type of time to type(time)
     :param {time|datetime.datetime|datetime.date|int|long|float|string} value: time of other type
-    :param {string} format_str: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :param {string} from_format: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :return {time.struct_time}: the type(time) of time
     """
     if value in (None, ''):
@@ -114,7 +111,7 @@ def to_time(value=None, format_str=None, default_now=False):
         return value
     # string, change type first
     elif isinstance(value, basestring):
-        value = _str_2_datetime(value, format_str=format_str)
+        value = _str_2_datetime(value, from_format=from_format)
         return value.timetuple()
     # number, treated as a timestamp
     elif isinstance(value, (int, long, float)):
@@ -126,13 +123,13 @@ def to_time(value=None, format_str=None, default_now=False):
     return None
 
 
-def to_datetime(value=None, format_str=None, default_now=False):
+def to_datetime(value=None, default_now=False, from_format=None):
     """
     change other type of time to type(datetime.datetime)
     note: from type(time) to type(datetime.datetime), can not keep microsecond
     :param {time|datetime.datetime|datetime.date|int|long|float|string} value: time of other type
-    :param {string} format_str: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :param {string} from_format: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :return {datetime.datetime}: the type(datetime.datetime) of time
     """
     if value in (None, ''):
@@ -151,7 +148,7 @@ def to_datetime(value=None, format_str=None, default_now=False):
         return datetime.datetime(*value[:6])
     # string
     elif isinstance(value, basestring):
-        return _str_2_datetime(value, format_str=format_str)
+        return _str_2_datetime(value, from_format=from_format)
     # number, treated as a timestamp
     elif isinstance(value, (int, long, float)):
         return _number_2_datetime(value)
@@ -161,12 +158,12 @@ def to_datetime(value=None, format_str=None, default_now=False):
     return None
 
 
-def to_date(value=None, format_str=None, default_now=False):
+def to_date(value=None, default_now=False, from_format=None):
     """
     change other type of time to type(datetime.date)
     :param {time|datetime.datetime|datetime.date|int|long|float|string} value: time of other type
-    :param {string} format_str: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :param {string} from_format: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :return {datetime.date}: the type(datetime.date) of time
     """
     if value in (None, ''):
@@ -185,7 +182,7 @@ def to_date(value=None, format_str=None, default_now=False):
         return datetime.date(*value[:3])
     # string, change type first
     elif isinstance(value, basestring):
-        value = _str_2_datetime(value, format_str=format_str)
+        value = _str_2_datetime(value, from_format=from_format)
         return value.date()
     # number, treated as a timestamp
     elif isinstance(value, (int, long, float)):
@@ -197,12 +194,12 @@ def to_date(value=None, format_str=None, default_now=False):
     return None
 
 
-def to_timestamp(value=None, format_str=None, default_now=False):
+def to_timestamp(value=None, from_format=None, default_now=False):
     """
     change time to timestamp(unit: second)
-    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: time
-    :param {string} format_str: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
+    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :param {string} from_format: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
     :return {float}: timestamp(unit: second)
     """
     if value in (None, ''):
@@ -217,7 +214,7 @@ def to_timestamp(value=None, format_str=None, default_now=False):
         return time.mktime(value)
     # str
     elif isinstance(value, basestring):
-        value = _str_2_datetime(value, format_str=format_str)
+        value = _str_2_datetime(value, from_format=from_format)
         return time.mktime(value.timetuple())
     # number, treated as a timestamp
     elif isinstance(value, (int, long, float)):
@@ -228,15 +225,15 @@ def to_timestamp(value=None, format_str=None, default_now=False):
     return None
 
 
-def _str_2_datetime(value, format_str=None):
+def _str_2_datetime(value, from_format=None):
     """
     change string time to type(datetime.datetime)
-    :param {string} value: time
-    :param {string} format_str: use this format to get time if has(default format: %Y-%m-%d %H:%M:%S)
+    :param {string} value: original time
+    :param {string} from_format: use this format to get time if has(default format: %Y-%m-%d %H:%M:%S)
     :return {datetime.datetime}: the type(datetime.datetime) of time
     """
-    if format_str:
-        return datetime.datetime.strptime(value, format_str)
+    if from_format:
+        return datetime.datetime.strptime(value, from_format)
 
     match = datetime_re.match(value)
     if match:
@@ -248,12 +245,12 @@ def _str_2_datetime(value, format_str=None):
         return datetime.datetime(**kw)
 
     # try to fix Chinese
-    global CONFIG
+    global FORMAT_LIST
     if '上午' in value: value = value.replace('上午', 'AM')
     if u'上午' in value: value = value.replace(u'上午', 'AM')
     if '下午' in value: value = value.replace('下午', 'PM')
     if u'下午' in value: value = value.replace(u'下午', 'PM')
-    for format in CONFIG.get('format_list'):
+    for format in FORMAT_LIST:
         try:
             return datetime.datetime.strptime(value, format)
         except:
@@ -264,28 +261,27 @@ def _str_2_datetime(value, format_str=None):
 
 def _number_2_datetime(value):
     """
-    纯数值类型转成时间
-    :param {int|long|float} value: 原时间
-    :return {datetime.datetime}: 对应的时间
+    number to time
+    :param {int|long|float} value: timestamp
+    :return {datetime.datetime}: time
     """
     return datetime.datetime.fromtimestamp(value)
 
 
 def _timedelta_2_datetime(value):
     """
-    datetime.timedelta类型转成时间
-    :param {datetime.timedelta} value: 原时间
-    :return {datetime.datetime}: 对应的时间
+    datetime.timedelta to datetime.datetime
+    :param {datetime.timedelta} value: time of type datetime.timedelta
+    :return {datetime.datetime}: time of type datetime.datetime
     """
-    # datetime.timedelta 类型，则从初始时间相加减得出结果
     return datetime.datetime.fromtimestamp(0) + value
 
 
 def to_datetime_time(value):
     """
-    将时间转成 datetime.time 类型
-    :param {datetime.time|datetime.datetime|string} value: 时间字符串
-    :return {datetime.time}: 对应的时间
+    change time to type of datetime.time
+    :param {datetime.time|datetime.datetime|string} value: original time
+    :return {datetime.time}: time of type datetime.time
     """
     if value in ('', None):
         return None
@@ -315,29 +311,28 @@ def to_datetime_time(value):
         minute = (seconds % 3600) // 60
         second = seconds % 60
         return datetime.time(hour, minute, second)
-    # 其它类型,无法支持
     return None
 
 
 def datetime_time_to_str(value, format_str='%H:%M:%S'):
     """
-    datetime.time 时间类型，转成前端需要的字符串
-    :param {datetime.time|string} value: 时间
-    :param {string} format_str: 日期格式化的格式字符串(默认为: %Y-%m-%d %H:%M:%S)
-    :return {string}: 时间字符串
+    change time of type(datetime.time) to type(str)
+    :param {datetime.time|string} value: original time
+    :param {string} format_str: the return format of time. (default format: %H:%M:%S)
+    :return {string}: the string time
     """
     value = to_datetime_time(value)
-    if value is None: return None  # 无法支持的类型
+    if value is None:
+        return None
     return value.strftime(format_str)
 
 
-def is_dst(value=None, format_str=None):
+def is_dst(value=None, from_format=None):
     """
-    判断传入时间是否夏令时
-    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: 需判断的时间(为空则默认为当前时间；纯数值则认为是时间戳,单位:秒)
-    :param {string} format_str: 日期格式化的格式字符串(默认为: %Y-%m-%d %H:%M:%S)
-    :return {bool}: 是否夏令时
+    whether daylight time
+    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
+    :param {string} from_format: when input value is str, use this format to get time(default format: %Y-%m-%d %H:%M:%S)
+    :return {bool}: True when daylight time, else False
     """
-    timestamp = to_timestamp(value=value, format_str=format_str)
-    return bool(time.localtime(timestamp).tm_isdst)
-
+    _time = to_time(value=value, from_format=from_format)
+    return bool(_time.tm_isdst) if _time is not None else False

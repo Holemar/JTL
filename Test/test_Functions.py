@@ -23,6 +23,9 @@ Functions unittest
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import uuid
+import time
+import datetime
 import unittest
 
 from JTL import Functions
@@ -66,6 +69,21 @@ class FunctionsTest(unittest.TestCase):
         self.assertEqual(Functions.to_number('1.1'), 1.1)
         self.assertEqual(Functions.to_number(1.1), 1.1)
         self.assertEqual(Functions.to_number('1.23e7'), 12300000.0)
+
+    def test_to_string(self):
+        self.assertEqual(Functions.to_string(None), None)
+        self.assertEqual(Functions.to_string(''), '')
+        self.assertEqual(Functions.to_string(b'aa'), 'aa')
+        self.assertEqual(Functions.to_string(uuid.UUID('409c7441-a4a5-4ce1-9b3c-c7e0002e87bd')),
+                         '409c7441a4a54ce19b3cc7e0002e87bd')
+
+        # time
+        self.assertEqual(Functions.to_string(datetime.datetime(2019, 9, 3, 8, 51, 6)), '2019-09-03T08:51:06')
+        self.assertEqual(Functions.to_string(datetime.date(2019, 9, 13)), '2019-09-13')
+        dt = time.strptime('2014/03/25 19:05:33', '%Y/%m/%d %H:%M:%S')
+        self.assertEqual(Functions.to_string(dt), '2014-03-25T19:05:33')
+        self.assertEqual(Functions.to_string(time.localtime()), Functions.to_string(datetime.datetime.now()))
+        self.assertEqual(Functions.to_string(datetime.time(12, 9, 2)), '12:09:02')
 
 
 if __name__ == "__main__":

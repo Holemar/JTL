@@ -34,10 +34,11 @@ class InterpreterTest(unittest.TestCase):
         self._testData = {
             'a': {
                 'X': 3,
-                'Y': 2,
+                'Y': 2
             },
             'b': {'p': {'d': {'q': 'test'}}},
             'c': 'asdf',
+            'Z': '5.32e5'
         }
 
     def test_transformChain(self):
@@ -52,6 +53,7 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ and false'), False)
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ and a.Y d'), False)
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ or False'), True)
+        self.assertEqual(Interpreter.transform(self._testData, 'd $ or e a.Y False'), True)
 
     def test_transformArithmetic(self):
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ + a.Y'), 5)
@@ -63,6 +65,10 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ / a.Y'), 1.5)
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ % a.Y'), 1)
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ ** a.Y'), 9)
+
+        self.assertEqual(Interpreter.transform(self._testData, 'Z $ toInt'), 532000)
+        self.assertEqual(Interpreter.transform(self._testData, 'Z $ toFloat $ + 1.2'), 532001.2)
+        self.assertEqual(Interpreter.transform(self._testData, 'Z $ toNumber'), 532000)
 
     def test_transformComparison(self):
         self.assertEqual(Interpreter.transform(self._testData, 'a.X $ == 3'), True)
@@ -76,13 +82,28 @@ class InterpreterTest(unittest.TestCase):
     def test_transformDictionary(self):
         self.assertEqual(Interpreter.transform(self._testData, 'a $ keys $ sorted'), ['X', 'Y'])
         self.assertEqual(Interpreter.transform(self._testData, 'a $ values $ sorted'), [2, 3])
+        self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumChange "{1: 'one', 2: 'two'}"'''), 'two')
+
+    def test_transformSequence(self):
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y'), [3, 2])
         self.assertEqual(Interpreter.transform(self._testData, '* $ list a.X a.Y'), [3, 2])
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ 0'), 3)
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ first'), 3)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y $ last'), 2)
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 2'), 5)
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 5 $ 3'), None)
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 0 $ rmFirst'), [2, 0])
+        self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y 0 $ rmLast'), [3, 2])
         self.assertEqual(Interpreter.transform(self._testData, '$ list c b.p.d.q "h" $ join "-"'), 'asdf-test-h')
+        self.assertEqual(Interpreter.transform(self._testData, '$ list c q "h" '), ['asdf', None, 'h'])
+        self.assertEqual(Interpreter.transform(self._testData, '$ list c q "h" $ rmNull'), ['asdf', 'h'])
+
+    def test_transformFunctions(self):
+        transform_data = ('a $ keys $ sorted', lambda x, y: y.join(x), {'y': '**'})
+        self.assertEqual(Interpreter.transformJson(self._testData, transform_data), 'X**Y')
+
+        transform_data = ('a $ keys $ sorted', lambda x: ','.join(x))
+        self.assertEqual(Interpreter.transformJson(self._testData, transform_data), 'X,Y')
 
     def test_transformJson(self):
         for test_name in ["faa1", "test1"]:

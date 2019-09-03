@@ -3,44 +3,22 @@
 change type
 """
 
-import time
-import datetime
-from JTL import Interpreter, time_util
+import types
+from JTL import Interpreter
+from JTL import time_util
+from JTL import Functions
+
 
 __all__ = ('date_2_str', 'datetime_2_str', 'jtl_change')
 
 
 def date_2_str(value, format_str='%Y-%m-%d', default_now=False):
     """
-    将日期格式化成字符串
-    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
-    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%d)
-    :param {string} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
-    :return {string}: 格式化后的时间字符串
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "birthday",
-            "external_field": "birthday",
-            "description": "生日",
-            "to_bello_fun": "date_2_str",
-            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
-            "to_external_fun": "date_2_str",
-            "to_external_param": {"format_str": "%Y-%m-%d"}
-        } );
-    json配置范例:
-        {"birthday": {
-            "_source_col_name": "birthday",
-            "_type_change": "date_2_str",
-            "format_str": "%Y/%m/%d"
-          },
-          "start_date": {
-            "_source_col_name": "start_date",
-            "_type_change": "date_2_str",  # 参数跟默认值一样的话可以不写参数
-          },
-          "end_date": "end_date $ toString"  # 日期转字符串，如果是默认格式可以直接用 toString 函数，它会根据 datetime.datetime 及 datetime.date 类型来判断格式
-        }
+    change a time to string
+    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
+    :param {string} format_str: the return format of time. (default format: %Y-%m-%d)
+    :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :return {string}: the string time
     """
     format_str = format_str or '%Y-%m-%d'
     return time_util.to_string(value, format_str, default_now=default_now)
@@ -48,108 +26,23 @@ def date_2_str(value, format_str='%Y-%m-%d', default_now=False):
 
 def datetime_2_str(value, format_str='%Y-%m-%dT%H:%M:%S', default_now=False):
     """
-    将日期格式化成字符串
-    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
-    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%dT%H:%M:%S)
-    :param {string} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
-    :return {string}: 格式化后的时间字符串
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "end_date",
-            "external_field": "end_date",
-            "description": "结束时间",
-            "to_bello_fun": "datetime_2_str",
-            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
-            "to_external_fun": "datetime_2_str",
-            "to_external_param": {"format_str": "%Y-%m-%d %H:%M:%S"}
-        } );
-    json配置范例:
-        {"birthday": {
-            "_source_col_name": "birthday",
-            "_type_change": "datetime_2_str",
-            "format_str": "%Y/%m/%d %H:%M:%S"
-          },
-          "start_date": {
-            "_source_col_name": "start_date",
-            "_type_change": "datetime_2_str",  # 参数跟默认值一样的话可以不写参数
-          },
-          "end_date": "end_date $ toString"  # 日期转字符串，如果是默认格式可以直接用 toString 函数，它会根据 datetime.datetime 及 datetime.date 类型来判断格式
-        }
+    change a time to string
+    :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
+    :param {string} format_str: the return format of time. (default format: %Y-%m-%dT%H:%M:%S)
+    :param {bool} default_now: True: when value is None return now, False: when value is None return None.
+    :return {string}: the string time
     """
     format_str = format_str or '%Y-%m-%dT%H:%M:%S'
     return date_2_str(value, format_str=format_str, default_now=default_now)
 
 
-def to_date(value, default_now=False):
-    """
-    将 字符串或者其它类型的时间 转成 datetime.date 类型
-    :param {time|datetime.datetime|datetime.date|int|float|str} value: 原时间(纯数值则认为是时间戳,单位:秒)
-    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%d)
-    :param {bool} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
-    :return {datetime.date}: 对应的日期
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "birthday",
-            "external_field": "birthday",
-            "description": "生日",
-            "to_bello_fun": "date_2_str",
-            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
-            "to_external_fun": "to_date",
-            "to_external_param": {"format_str": "%Y-%m-%d", "default_now": true}
-        } );
-    json配置范例:
-        {"birthday": {
-            "_source_col_name": "birthday",
-            "_type_change": "to_date",
-            "format_str": "%Y/%m/%d",
-            "default_now": True
-          },
-          "start_date": {
-            "_source_col_name": "start_date",
-            "_type_change": "to_date",  # 参数跟默认值一样的话可以不写参数
-          }
-        }
-    """
-    return time_util.to_date(value, default_now=default_now)
-
-
-def to_datetime(value, default_now=False):
-    """
-    将 字符串或者其它类型的时间 转成 datetime.datetime 类型
-    :param {time|datetime.datetime|datetime.date|int|float} value: 原时间(纯数值则认为是时间戳,单位:秒)
-    :param {string} format_str: 期望返回结果的格式字符串(默认为: %Y/%m/%dT%H:%M:%S)
-    :param {bool} default_now: 为 True 时当 value 是空值返回当前时间。为 False 时当 value 是空值返回 None。
-    :return {string}: 格式化后的时间字符串
-
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "end_date",
-            "external_field": "end_date",
-            "description": "结束时间",
-            "to_bello_fun": "to_datetime",
-            "to_bello_param": null,  // 参数跟默认值一样的话可以设参数为空值
-            "to_external_fun": "to_datetime",
-            "to_external_param": {"format_str": "%Y-%m-%d %H:%M:%S", "default_now": true}
-        } );
-    json配置范例:
-        {"birthday": {
-            "_source_col_name": "birthday",
-            "_type_change": "to_datetime",
-            "format_str": "%Y/%m/%d %H:%M:%S",
-            "default_now": True
-          },
-          "start_date": {
-            "_source_col_name": "start_date",
-            "_type_change": "to_datetime",  # 参数跟默认值一样的话可以不写参数
-          }
-        }
-    """
-    return time_util.to_datetime(value, default_now=default_now)
+Functions.functions.update({
+    # Date
+    'dateToString': date_2_str,
+    'datetimeToString': datetime_2_str,
+    'toDate': time_util.to_date,
+    'toDatetime': time_util.to_datetime,
+})
 
 
 def jtl_change(data, config_json):
@@ -159,19 +52,6 @@ def jtl_change(data, config_json):
     :param config_json: 数据映射的配置dict
     :return:
 
-    数据库配置范例:
-        db.getCollection("trans_fields").insert( {
-            "external_name": "shunfeng",
-            "bello_field": "start_date",
-            "external_field": "start_date",
-            "description": "开始日期",
-            "external_parent": "educations",  // 必须配置对应的父级名称
-            "bello_parent": "educations",  // 必须配置对应的父级名称
-            "to_bello_fun": "date_2_str",
-            "to_bello_param": null,
-            "to_external_fun": "date_2_str",
-            "to_external_param": {"format_str": "%Y-%m-%d"}
-        } );
     json配置范例(读取内嵌层):
         config_json = {
             "name": "name",
@@ -183,7 +63,7 @@ def jtl_change(data, config_json):
                     "major": "major",
                     "degree": {
                         "_source_col_name": "education",
-                        "_type_change": "enum_change",
+                        "_type_change": "enumChange",
                         "enum_dict": {"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}
                     },
                     "start_date": {
@@ -218,13 +98,16 @@ def jtl_change(data, config_json):
             v_param = v.copy()  # 避免改变原配置
             _source_col_name = v_param.pop('_source_col_name')
             _type = v_param.pop('_type_change')
-            if _type in __all__:
-                fun = eval(_type)
-                param = (_source_col_name, fun, v_param)
-                transform_data[k] = param
-            # 处理内嵌list，还是由 jtl_change 统一处理，起个别名即可
-            elif _type == 'list':
-                transform_data[k] = (_source_col_name, jtl_change, v_param)
+            fun = lambda *args, **kwargs: None
+            if isinstance(_type, str):
+                if _type in __all__:
+                    fun = eval(_type)
+                elif _type in Functions.functions:
+                    fun = Functions.functions.get(_type)
+            elif isinstance(_type, (types.FunctionType, types.MethodType)):
+                fun = _type
+            param = (_source_col_name, fun, v_param)
+            transform_data[k] = param
         # jtl 的转换
         else:
             transform_data[k] = v

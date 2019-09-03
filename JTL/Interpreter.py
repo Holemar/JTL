@@ -116,8 +116,14 @@ def transformJson(data, transformData, location=''):
         result = transform(data, transformData, location)
     # run the user-defined functions
     elif isinstance(transformData, tuple):
-        assert len(transformData) == 3
-        tem_transform, fun, param = transformData
+        _length = len(transformData)
+        if _length == 2:
+            tem_transform, fun = transformData
+            param = {}
+        elif _length == 3:
+            tem_transform, fun, param = transformData
+        else:
+            raise SyntaxError('error parameters')
         assert isinstance(tem_transform, str)
         assert isinstance(fun, (types.FunctionType, types.MethodType))
         assert isinstance(param, dict)
