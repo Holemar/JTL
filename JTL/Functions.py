@@ -24,9 +24,6 @@ import binascii
 import hashlib
 import hmac
 import math
-import uuid
-import time
-import datetime
 from JTL import json_util
 
 
@@ -74,33 +71,8 @@ def to_number(data):
     return float_value
 
 
-def to_string(data):
-    if data is None:
-        return None
-    # datetime
-    elif isinstance(data, datetime.datetime):
-        return data.strftime('%Y-%m-%dT%H:%M:%S')
-    # date
-    elif isinstance(data, datetime.date):
-        return data.strftime('%Y-%m-%d')
-    # time
-    elif isinstance(data, time.struct_time):
-        return time.strftime('%Y-%m-%dT%H:%M:%S', data)
-    # datetime.time
-    elif isinstance(data, datetime.time):
-        return data.strftime('%H:%M:%S')
-    # uuid
-    elif isinstance(data, uuid.UUID):
-        return data.hex
-    # bytes
-    if isinstance(data, bytes):
-        return json_util.decode2str(data)
-    return str(data)
-
-
 functions = {
     # Any
-    'toString': to_string,
     'toBool': to_bool,
     'toFloat': to_float,
     'toInt': to_int,
@@ -126,7 +98,7 @@ functions = {
 
     # String
     'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(
-        [to_string(t) for t in s if t is not None]) if isinstance(s, (tuple, list)) else None,
+        [functions.get('toString')(t) for t in s if t is not None]) if isinstance(s, (tuple, list)) else None,
 }
 
 

@@ -15,39 +15,49 @@ import decimal
 BASE_PATH = os.getcwd()
 
 # string encoding, try to encode str or decode bytes by this list
-CODING_LIST = ('utf8', 'unicode-escape', sys.getdefaultencoding(), 'gbk', 'big5')
+CODING_LIST = ('utf-8', 'gbk', 'big5', 'GB18030', sys.getdefaultencoding(), 'unicode-escape')
 
 # enum file json cache
 BIG_ENUM_JSON = {}
 
 
 def decode2str(content):
-    """change bytes to str"""
+    """change bytes or bytearray to utf-8 str"""
     if content is None:
         return None
-    if isinstance(content, bytes):
+    if isinstance(content, (bytes, bytearray)):
+        if '\\u' in str(content):
+            return content.decode('unicode-escape').encode().decode()
         for encoding in CODING_LIST:
             try:
-                return content.decode(encoding)
-            except UnicodeDecodeError as e:
+                content = content.decode(encoding)
+                if encoding == 'utf-8':
+                    return content
+                else:
+                    return content.encode().decode()  # change to utf-8 string
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
                 pass
         # If that fails, ignore error messages
-        content = content.decode("utf8", "ignore")
+        content = content.decode("utf-8", "ignore")
     return content
 
 
 def encode2bytes(content):
-    """change str to bytes"""
+    """change str to utf-8 bytes"""
     if content is None:
         return None
     if isinstance(content, str):
-        for encoding in CODING_LIST:
+        for encoding in ('gbk', 'big5', 'GB18030', sys.getdefaultencoding(), 'utf-8', 'unicode-escape'):
             try:
-                return content.encode(encoding)
-            except UnicodeEncodeError as e:
+                value = content.encode(encoding)
+                if encoding == 'utf-8':
+                    return value
+                else:
+                    return value.decode().encode()  # change to utf-8 bytes
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
                 pass
         # If that fails, ignore error messages
-        content = content.encode('utf8', 'ignore')
+        content = content.encode('utf-8', 'ignore')
     return content
 
 
@@ -127,7 +137,7 @@ def load_json(value):
     if value is None:
         return None
 
-    if isinstance(value, bytes):
+    if isinstance(value, (bytes, bytearray)):
         value = decode2str(value)
     if not isinstance(value, str):
         return None
@@ -176,6 +186,8 @@ def json_serializable(value):
     """
     if value is None:
         return None
+    elif isinstance(value, (bytes, bytearray)):
+        return decode2str(value)
     # str/unicode
     elif isinstance(value, str):
         return value

@@ -3,6 +3,7 @@
 type_change unittest
 """
 
+import uuid
 import time
 import datetime
 import unittest
@@ -12,6 +13,21 @@ from JTL import type_change
 
 
 class TestTypeChange(unittest.TestCase):
+
+    def test_to_string(self):
+        self.assertEqual(type_change.to_string(None), None)
+        self.assertEqual(type_change.to_string(''), '')
+        self.assertEqual(type_change.to_string(b'aa'), 'aa')
+        self.assertEqual(type_change.to_string(uuid.UUID('409c7441-a4a5-4ce1-9b3c-c7e0002e87bd')),
+                         '409c7441a4a54ce19b3cc7e0002e87bd')
+
+        # time
+        self.assertEqual(type_change.to_string(datetime.datetime(2019, 9, 3, 8, 51, 6)), '2019-09-03T08:51:06')
+        self.assertEqual(type_change.to_string(datetime.date(2019, 9, 13)), '2019-09-13')
+        dt = time.strptime('2014/03/25 19:05:33', '%Y/%m/%d %H:%M:%S')
+        self.assertEqual(type_change.to_string(dt), '2014-03-25T19:05:33')
+        self.assertEqual(type_change.to_string(time.localtime()), type_change.to_string(datetime.datetime.now()))
+        self.assertEqual(type_change.to_string(datetime.time(12, 9, 2)), '12:09:02')
 
     def test_date_2_str(self):
         """date_2_str test"""

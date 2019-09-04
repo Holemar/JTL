@@ -3,40 +3,75 @@
 change type
 """
 
+import uuid
 import types
+import time
+import datetime
 from JTL import Interpreter
 from JTL import time_util
 from JTL import Functions
+from JTL.json_util import enum_change, enum_file_change, decode2str
+from JTL.time_util import to_date, to_datetime
 
 
-__all__ = ('date_2_str', 'datetime_2_str', 'jtl_change')
+__all__ = ('enum_change', 'enum_file_change', 'date_2_str', 'datetime_2_str', 'to_date', 'to_datetime', 'jtl_change')
+
+DEFAULT_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 
 
-def date_2_str(value, format_str='%Y-%m-%d', default_now=False):
+def to_string(data):
+    """change input to string"""
+    if data is None:
+        return None
+    # time, datetime
+    elif isinstance(data, (datetime.datetime, time.struct_time)):
+        return datetime_2_str(data)
+    # date
+    elif isinstance(data, datetime.date):
+        return date_2_str(data)
+    # datetime.time
+    elif isinstance(data, datetime.time):
+        return time_util.to_string(data)
+    # uuid
+    elif isinstance(data, uuid.UUID):
+        return data.hex
+    # bytes
+    if isinstance(data, (bytes, bytearray)):
+        return decode2str(data)
+    return str(data)
+
+
+def date_2_str(value, format_str=None, default_now=False):
     """
     change a time to string
     :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
     :param {string} format_str: the return format of time. (default format: %Y-%m-%d)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
     :return {string}: the string time
+
+    use in JTL: '<SELECTOR> $ dateToString "<format_str>" '
     """
-    format_str = format_str or '%Y-%m-%d'
+    format_str = format_str or DEFAULT_DATE_FORMAT
     return time_util.to_string(value, format_str, default_now=default_now)
 
 
-def datetime_2_str(value, format_str='%Y-%m-%dT%H:%M:%S', default_now=False):
+def datetime_2_str(value, format_str=None, default_now=False):
     """
     change a time to string
     :param {time|datetime.datetime|datetime.date|int|long|float|string} value: original time
     :param {string} format_str: the return format of time. (default format: %Y-%m-%dT%H:%M:%S)
     :param {bool} default_now: True: when value is None return now, False: when value is None return None.
     :return {string}: the string time
+
+    use in JTL: '<SELECTOR> $ datetimeToString "<format_str>" '
     """
-    format_str = format_str or '%Y-%m-%dT%H:%M:%S'
+    format_str = format_str or DEFAULT_TIME_FORMAT
     return date_2_str(value, format_str=format_str, default_now=default_now)
 
 
 Functions.functions.update({
+    'toString': to_string,
     # Date
     'dateToString': date_2_str,
     'datetimeToString': datetime_2_str,
@@ -63,7 +98,7 @@ def jtl_change(data, config_json):
                     "major": "major",
                     "degree": {
                         "_source_col_name": "education",
-                        "_type_change": "enumChange",
+                        "_type_change": "enum_change",
                         "enum_dict": {"1": "高中及以下", "2": "大专", "3": "本科", "4": "硕士及以上"}
                     },
                     "start_date": {

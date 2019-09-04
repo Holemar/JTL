@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 
 # Copyright (c) 2015-2019 Agalmic Ventures LLC (www.agalmicventures.com)
 #

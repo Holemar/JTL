@@ -15,6 +15,37 @@ from JTL import json_util
 
 class TestJsonUtil(unittest.TestCase):
 
+    def test_decode2str(self):
+        a = "哈哈xyz呵呵馬大親"
+        for code in ('utf-8', 'GBK', 'big5', 'GB18030', 'unicode-escape'):
+            # bytes
+            b = bytes(a, code)
+            s = json_util.decode2str(b)
+            self.assertTrue(isinstance(s, str))
+            self.assertEqual(s, a)
+            # bytearray
+            br = bytearray(a, code)
+            s = json_util.decode2str(br)
+            self.assertTrue(isinstance(s, str))
+            self.assertEqual(s, a)
+
+    def test_encode2bytes(self):
+        # big5
+        b0 = bytes("馬xyz大親", 'utf-8')
+        code = 'big5'
+        s0 = b0.decode(code)
+        b2 = json_util.encode2bytes(s0)
+        self.assertTrue(isinstance(b2, bytes))
+        self.assertEqual(b2, b0)
+
+        b0 = bytes("哈哈xyz呵呵大的", 'utf-8')
+        # for code in ('utf-8', 'gbk', 'unicode-escape'):  # todo: unicode-escape 类型未支持
+        for code in ('utf-8', 'gbk'):
+            s0 = b0.decode(code)
+            b2 = json_util.encode2bytes(s0)
+            self.assertTrue(isinstance(b2, bytes))
+            self.assertEqual(b2, b0)
+
     def test_enum_file_change(self):
         """enum_file_change test"""
         file_name = 'tests/example_enum.json'
