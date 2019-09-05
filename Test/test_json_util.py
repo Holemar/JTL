@@ -31,20 +31,29 @@ class TestJsonUtil(unittest.TestCase):
 
     def test_encode2bytes(self):
         # big5
-        b0 = bytes("馬xyz大親", 'utf-8')
+        a = "馬xyz大親"
+        b0 = bytes(a, 'utf-8')
         code = 'big5'
         s0 = b0.decode(code)
         b2 = json_util.encode2bytes(s0)
         self.assertTrue(isinstance(b2, bytes))
         self.assertEqual(b2, b0)
+        # str
+        s = json_util.decode2str(s0)
+        self.assertTrue(isinstance(s, str))
+        self.assertEqual(s, a)
 
-        b0 = bytes("哈哈xyz呵呵大的", 'utf-8')
-        # for code in ('utf-8', 'gbk', 'unicode-escape'):  # todo: unicode-escape 类型未支持
-        for code in ('utf-8', 'gbk'):
+        a = "哈哈xyz呵呵大的"
+        b0 = bytes(a, 'utf-8')
+        for code in ('utf-8', 'gbk', 'GB18030', 'unicode-escape'):
             s0 = b0.decode(code)
             b2 = json_util.encode2bytes(s0)
             self.assertTrue(isinstance(b2, bytes))
             self.assertEqual(b2, b0)
+            # str
+            s = json_util.decode2str(s0)
+            self.assertTrue(isinstance(s, str))
+            self.assertEqual(s, a)
 
     def test_enum_file_change(self):
         """enum_file_change test"""

@@ -15,30 +15,59 @@ import decimal
 BASE_PATH = os.getcwd()
 
 # string encoding, try to encode str or decode bytes by this list
-CODING_LIST = ('utf-8', 'gbk', 'big5', 'GB18030', sys.getdefaultencoding(), 'unicode-escape')
+DECODE_CODING_LIST = ['utf-8', 'gbk', 'big5', 'GB18030']
+ENCODE_CODING_LIST = ['big5', 'GB18030', 'utf-8']
+default_code = sys.getdefaultencoding()
+if default_code not in DECODE_CODING_LIST:
+    DECODE_CODING_LIST.append(default_code)
+if default_code not in ENCODE_CODING_LIST:
+    ENCODE_CODING_LIST[-1:-1] = [default_code]
 
 # enum file json cache
 BIG_ENUM_JSON = {}
 
 
 def decode2str(content):
-    """change bytes or bytearray to utf-8 str"""
+    """change str, bytes or bytearray to utf-8 str"""
     if content is None:
         return None
     if isinstance(content, (bytes, bytearray)):
+        # unicode-escape
         if '\\u' in str(content):
             return content.decode('unicode-escape').encode().decode()
-        for encoding in CODING_LIST:
+        # try code list
+        for encoding in DECODE_CODING_LIST:
             try:
-                content = content.decode(encoding)
+                value = content.decode(encoding)
                 if encoding == 'utf-8':
-                    return content
+                    return value
                 else:
-                    return content.encode().decode()  # change to utf-8 string
+                    return value.encode().decode()  # change to utf-8 string
             except (UnicodeEncodeError, UnicodeDecodeError) as e:
                 pass
         # If that fails, ignore error messages
-        content = content.decode("utf-8", "ignore")
+        return content.decode("utf-8", "ignore")
+    elif isinstance(content, str):
+        # unicode-escape
+        try_s = []
+        for a in content:
+            c = ord(a)
+            if c <= 256:
+                try_s.append(c)
+            else:
+                break
+        else:
+            if len(try_s) == len(content):
+                return bytes(try_s).decode("utf-8")
+        # try code list
+        for encoding in ENCODE_CODING_LIST:
+            try:
+                value = content.encode(encoding)
+                return value.decode()
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
+                pass
+        # If that fails, ignore error messages
+        return content.encode('utf-8', 'ignore').decode()
     return content
 
 
@@ -47,7 +76,19 @@ def encode2bytes(content):
     if content is None:
         return None
     if isinstance(content, str):
-        for encoding in ('gbk', 'big5', 'GB18030', sys.getdefaultencoding(), 'utf-8', 'unicode-escape'):
+        # unicode-escape
+        try_s = []
+        for a in content:
+            c = ord(a)
+            if c <= 256:
+                try_s.append(c)
+            else:
+                break
+        else:
+            if len(try_s) == len(content):
+                return bytes(try_s)
+        # try code list
+        for encoding in ENCODE_CODING_LIST:
             try:
                 value = content.encode(encoding)
                 if encoding == 'utf-8':
@@ -66,6 +107,8 @@ def enum_file_change(key, file_name):
     :param key: key of enum json
     :param file_name: the file of enum json
     :return: value of enum json
+
+    use in JTL: "<SELECTOR> $ enumFileChange '/data/example_enum.json' "
     """
     global BIG_ENUM_JSON
     if file_name in BIG_ENUM_JSON:
@@ -105,6 +148,8 @@ def enum_change(key, enum_dict):
     :param key: key of enum json
     :param enum_dict: enum json
     :return: value of enum json
+
+    use in JTL: '''<SELECTOR> $ enumChange '{"F": "女", "M": "男"}' '''
     """
     if isinstance(enum_dict, str):
         enum_dict = load_json(enum_dict)
