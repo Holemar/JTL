@@ -5,6 +5,7 @@ JSON Transformation Language, JTL, 是一个像 `sed` 和 `awk` 的 JSON 解析�
     > cat tests/faa1.json
     {
         ...
+        "city": "Washington",
         "weather": {
             ...,
             "temp": "66.0 F (18.9 C)",
@@ -80,7 +81,7 @@ JTL 具有各种宽松的内置转换函数，可以轻松处理缺失值，除�
 
 如:
 
-    > cat tests/faa1.json | ./JTL/__init__.py '{"x": "weather.spring $ default 'one' ", "y": "weather.temp $ default weather.temp "}'
+    > cat tests/faa1.json | ./JTL/__init__.py '{"x": "weather.spring $ default \"one\" ", "y": "weather.temp $ default city "}'
     {
         "x": "one",
         "y": "66.0 F (18.9 C)"
@@ -141,16 +142,16 @@ print(result)  # print: two
 返回枚举dict对应的值。但输入的参数是文件路径，从文件中读取枚举dict。一般在枚举很大时用。
 
 ### Hashing
-JTL supports a variety of cryptographic hash functions: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`. In addition, [HMAC's](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) are supported for each of these hash types (e.g. `hmac_md5`).
+JTL支持各种加密hash函数: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`。另外，每种hash函数都支持 [HMAC's](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)。
 
 ### Math
 
-* Basics: `abs`, `ceil`, `floor`
-* Exponentials: `exp`, `lg`, `ln`, `log`, `sqrt`
+* 基础(Basics): `abs`, `ceil`, `floor`
+* 指数(Exponentials): `exp`, `lg`, `ln`, `log`, `sqrt`
 * Flags: `isFinite`, `isNan`
-* Trigonometry: `sin`, `cos`, `tan`
-* Hyperbolic trigonometry: `sinh`, `cosh`, `tanh`
-* Advanced: `erf`
+* 三角(Trigonometry): `sin`, `cos`, `tan`
+* 双曲三角学(Hyperbolic trigonometry): `sinh`, `cosh`, `tanh`
+* 高级(Advanced): `erf`
 
 ### Sequence
 
@@ -165,43 +166,55 @@ JTL supports a variety of cryptographic hash functions: `md5`, `sha1`, `sha224`,
     }
 
 #### `count <ELEMENT>`
-Returns the number of times the element appears in the list.
+返回列表的元素数量。
 
 #### `first`
-Returns the first element of the list, or `null` if the list is empty.
+返回列表的第一个元素。如果是空列表，则返回 `null`。
 
 #### `last`
-Returns the last element of the list, or `null` if the list is empty.
+返回列表的最后一个元素。如果是空列表，则返回 `null`。
 
 #### `rmFirst`
-Returns the rest of the list after the first element.
+去掉列表的第一个元素，然后返回结果列表。
 
 #### `rmLast`
-Returns all of the elements of the list except the last one.
+去掉列表的最后一个元素，然后返回结果列表。
 
 #### `rmNull`
-Returns all of the elements of the list except the `null` element.
+去掉列表的所有`null`元素，然后返回结果列表。
 
 #### `list`
-Returns all of the parameter values as a list except the first value.
+将所有参数值作为列表返回，但去掉 `<SELECTOR>` 元素。
+如:
+
+    > cat tests/faa1.json | ./JTL/__init__.py '{"x": "* $ list weather.temp 1 \"ab\" city" }'
+    {
+        "x": [
+            "66.0 F (18.9 C)",
+            1,
+            "ab",
+            "Washington"
+        ]
+    }
+
 
 #### `length`
-Returns the length of the list.
+返回列表的长度。
 
 #### `max`
-Finds the maximum value in the list.
+找出列表里的最大值。
 
 #### `min`
-Finds the minimum value in the list.
+找出列表里的最小值。
 
 #### `sorted`
-Returns a sorted version of the list.
+返回排序后的列表。
 
 #### `sum`
-Takes the sum of values in the list.
+取得列表里所有值的和。
 
 #### `unique`
-Returns a copy of the list with duplicates removed.
+返回一个去除重复值之后的列表。
 
 ### String
 
