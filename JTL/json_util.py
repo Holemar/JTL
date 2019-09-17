@@ -49,16 +49,9 @@ def decode2str(content):
         return content.decode("utf-8", "ignore")
     elif isinstance(content, str):
         # unicode-escape
-        try_s = []
-        for a in content:
-            c = ord(a)
-            if c <= 256:
-                try_s.append(c)
-            else:
-                break
-        else:
-            if len(try_s) == len(content):
-                return bytes(try_s).decode("utf-8")
+        try_s = [ord(a) for a in content if ord(a) <= 256]
+        if len(try_s) == len(content):
+            return bytes(try_s).decode("utf-8")
         # try code list
         for encoding in ENCODE_CODING_LIST:
             try:
@@ -77,16 +70,9 @@ def encode2bytes(content):
         return None
     if isinstance(content, str):
         # unicode-escape
-        try_s = []
-        for a in content:
-            c = ord(a)
-            if c <= 256:
-                try_s.append(c)
-            else:
-                break
-        else:
-            if len(try_s) == len(content):
-                return bytes(try_s)
+        try_s = [ord(a) for a in content if ord(a) <= 256]
+        if len(try_s) == len(content):
+            return bytes(try_s)
         # try code list
         for encoding in ENCODE_CODING_LIST:
             try:

@@ -1,4 +1,5 @@
 # JTL
+[简体中文版本](./README_CN.md)  
 JSON Transformation Language, JTL, is like `sed` and `awk` for JSON: a simple language for
 transforming JSON values into other JSON values. The syntax of the language itself is also JSON
 (so it can operate on itself - meta!). Command line prototyping is easy:
@@ -114,10 +115,42 @@ Returns the keys of the dictionary as a list.
 Returns the values of the dictionary as a list.
 
 #### `enumChange`
-Returns the value of the enum.
+Returns the value of the enum.  
+JTL expressions: `<SELECTOR> $ enumChange '{"F": "female", "M": "male"}'`  
+
+For example:
+
+```python
+from JTL import Interpreter
+
+data = {
+    'a': {
+        'X': 3,
+        'Y': 2
+    }
+}
+result = Interpreter.transform(data, '''a.Y $ enumChange "{1: 'one', 2: 'two'}" ''')
+print(result)  # print: two
+```
 
 #### `enumFileChange`
-Returns the value of the enum. And the enum json load by a file.
+Returns the value of the enum. And the enum json load by a file.  
+JTL expressions: `<SELECTOR> $ enumFileChange file_path`  
+The file path can be either absolute addresses or relative to the project startup directory.
+
+For example:
+
+```python
+from JTL import Interpreter
+
+data = {
+    'a': {
+        'X': 3,
+        'Y': 2
+    }
+}
+result = Interpreter.transform(data, 'a.Y $ enumFileChange "/data/example_enum.json" ')
+```
 
 ### Hashing
 JTL supports a variety of cryptographic hash functions: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`. In addition, [HMAC's](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) are supported for each of these hash types (e.g. `hmac_md5`).
@@ -157,6 +190,57 @@ Returns all of the elements of the list except the `null` element.
 #### `list`
 Returns all of the parameter values as a list except the first value.
 
+For example:
+
+    > cat tests/faa1.json | ./JTL/__init__.py '{"x": "* $ list weather.temp 1 \"ab\" city" }'
+    {
+        "x": ["66.0 F (18.9 C)", 1, "ab", "Washington"]
+    }
+
+##### return more fields to a list
+
+```python
+from JTL import Interpreter
+
+data = {
+    "skill_type": "english",
+    "compet_level": "four level",
+    "time_use": "three years"
+}
+result = Interpreter.transform(data, '* $ list skill_type compet_level time_use ')
+print(result)  # ['english', 'four level', 'three years']
+```
+
+
+##### concat more fields to one
+
+```python
+from JTL import Interpreter
+
+data = {
+    "skill_type": "english",
+    "compet_level": "four level",
+    "time_use": "three years"
+}
+result = Interpreter.transform(data, '* $ list skill_type compet_level time_use $ join "/" ')
+print(result)  # english/four level/three years
+```
+
+
+##### get the first not null value in more fields
+
+```python
+from JTL import Interpreter
+
+data = {
+    "INTENTION_PLACE": None,
+    "INTENTION_PLACE_ONE": "London",
+    "INTENTION_PLACE_TWO": "Washington"
+}
+result = Interpreter.transform(data, '* $ list INTENTION_PLACE, INTENTION_PLACE_ONE, INTENTION_PLACE_TWO $ rmNull $ first')
+print(result)  # London
+```
+
 #### `length`
 Returns the length of the list.
 
@@ -181,3 +265,35 @@ Returns a copy of the list with duplicates removed.
 * Search: `find`, `replace`, `startsWith`, `endsWith`
 * Split / join: `join`, `split`, `lines`, `unlines`, `words`, `unwords`
 * Whitespace: `lstrip`, `rstrip`, `strip`
+
+### date/time
+
+#### Converts date/time to a string `toString`
+Converts the value of type `datetime.datetime`, `time` to a string as format `%Y-%m-%dT%H:%M:%S`.  
+Converts the value of type `datetime.date` to a string as format `%Y-%m-%d`.  
+Converts the value of type `datetime.time` to a string as format `%H:%M:%S`.  
+JTL expressions: `<SELECTOR> $ toString`  
+
+#### Converts date to a string `dateToString`
+Converts the value to a date string as default format `%Y-%m-%d`.  
+The first parameter is string format.  
+The second parameter bool `default_now`: True: when value is `null` regard as now, False: when value is `null` regard as `null`.  
+JTL expressions: `<SELECTOR> $ dateToString "<format_str>"? default_now?`  
+
+#### Converts time to a string `datetimeToString`
+Converts the value to a datetime string as default format `%Y-%m-%dT%H:%M:%S`.  
+The first parameter is string format.  
+The second parameter bool `default_now`: True: when value is `null` regard as now, False: when value is `null` regard as `null`.  
+JTL expressions: `<SELECTOR> $ datetimeToString "<format_str>"? default_now?`  
+
+#### Converts input value to date `toDate`
+Converts the value to a date of type `datetime.date`.  
+The first parameter bool `default_now`: True: when value is `null` regard as now, False: when value is `null` regard as `null`.  
+The second parameter string format, when input value is a string, set the from format string.
+JTL expressions: `<SELECTOR> $ toDate default_now? "<from_format_str>"? `  
+
+#### Converts input value to datetime `toDatetime`
+Converts the value to a datetime of type `datetime.datetime`.  
+The first parameter bool `default_now`: True: when value is `null` regard as now, False: when value is `null` regard as `null`.  
+The second parameter string format, when input value is a string, set the from format string.
+JTL expressions: `<SELECTOR> $ toDatetime default_now? "<from_format_str>"? `  

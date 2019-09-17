@@ -1,4 +1,5 @@
 # JTL
+[English version](./README.md)  
 JSON Transformation Language, JTL, 是一个像 `sed` 和 `awk` 的 JSON 解析器。
 是一个简单的 json 转换语言，容易得像如下语句：
 
@@ -103,7 +104,7 @@ JTL 具有各种宽松的内置转换函数，可以轻松处理缺失值，除�
 将输入值转成 int 值。如果传入值不是合法的数值则返回`null`。
 
 #### `toString`
-将输入值转成字符串。
+将输入值转成字符串。日期则按日期格式转换。
 
 ### Bool
 
@@ -120,12 +121,12 @@ JTL 具有各种宽松的内置转换函数，可以轻松处理缺失值，除�
 返回字典的 values 列表。
 
 #### `enumChange`
-返回枚举dict对应的值。
+返回枚举dict对应的值。  
+使用格式： `<SELECTOR> $ enumChange '{"F": "女", "M": "男"}'`  
 
 如:
 
 ```python
-
 from JTL import Interpreter
 
 data = {
@@ -139,7 +140,24 @@ print(result)  # print: two
 ```
 
 #### `enumFileChange`
-返回枚举dict对应的值。但输入的参数是文件路径，从文件中读取枚举dict。一般在枚举很大时用。
+返回枚举dict对应的值。但输入的参数是文件路径，从文件中读取枚举dict。一般在枚举很大时用。  
+使用格式： `<SELECTOR> $ enumFileChange 文件路径`  
+文件路径可以使用绝对地址，也可以是相对于项目启动目录的路径。
+
+如:
+
+```python
+from JTL import Interpreter
+
+data = {
+    'a': {
+        'X': 3,
+        'Y': 2
+    }
+}
+result = Interpreter.transform(data, 'a.Y $ enumFileChange "/data/example_enum.json" ')
+```
+
 
 ### Hashing
 JTL支持各种加密hash函数: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`。另外，每种hash函数都支持 [HMAC's](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code)。
@@ -189,14 +207,52 @@ JTL支持各种加密hash函数: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `s
 
     > cat tests/faa1.json | ./JTL/__init__.py '{"x": "* $ list weather.temp 1 \"ab\" city" }'
     {
-        "x": [
-            "66.0 F (18.9 C)",
-            1,
-            "ab",
-            "Washington"
-        ]
+        "x": ["66.0 F (18.9 C)", 1, "ab", "Washington"]
     }
 
+##### 获取多个字段值，且以list形式返回
+
+```python
+from JTL import Interpreter
+
+data = {
+    "skill_type": "英语",
+    "compet_level": "四级",
+    "time_use": "三年外贸经验"
+}
+result = Interpreter.transform(data, '* $ list skill_type compet_level time_use ')
+print(result)  # ['英语', '四级', '三年外贸经验']
+```
+
+
+##### 合并多个字段值
+
+```python
+from JTL import Interpreter
+
+data = {
+    "skill_type": "英语",
+    "compet_level": "四级",
+    "time_use": "三年外贸经验"
+}
+result = Interpreter.transform(data, '* $ list skill_type compet_level time_use $ join "-" ')
+print(result)  # 英语-四级-三年外贸经验
+```
+
+
+##### 在多个字段中，获取有值的任意一个，按字段列表的优先顺序取
+
+```python
+from JTL import Interpreter
+
+data = {
+    "INTENTION_PLACE": None,
+    "INTENTION_PLACE_ONE": "广东",
+    "INTENTION_PLACE_TWO": "上海"
+}
+result = Interpreter.transform(data, '* $ list INTENTION_PLACE, INTENTION_PLACE_ONE, INTENTION_PLACE_TWO $ rmNull $ first')
+print(result)  # 广东
+```
 
 #### `length`
 返回列表的长度。
@@ -222,3 +278,32 @@ JTL支持各种加密hash函数: `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `s
 * Search: `find`, `replace`, `startsWith`, `endsWith`
 * Split / join: `join`, `split`, `lines`, `unlines`, `words`, `unwords`
 * Whitespace: `lstrip`, `rstrip`, `strip`
+
+
+### 日期/时间
+
+#### 日期/时间转成字符串 `toString`
+将 `datetime.datetime`, `time` 类型按 `%Y-%m-%dT%H:%M:%S` 格式转成字符串。  
+将 `datetime.date` 类型按 `%Y-%m-%d` 格式转成字符串。  
+将 `datetime.time` 类型按 `%H:%M:%S` 格式转成字符串。  
+用法: `<SELECTOR> $ toString`
+
+#### 日期转成字符串 `dateToString`
+将所有日期/时间类型默认按 `%Y-%m-%d` 格式转成字符串。  
+第一个参数可以指定字符串格式，第二个参数(true/false)指定是否当日期/时间为`null`时取当前时间。  
+用法: `<SELECTOR> $ dateToString "<format_str>"? default_now?`
+
+#### 时间转成字符串 `datetimeToString`
+将所有日期/时间类型默认按 `%Y-%m-%dT%H:%M:%S` 格式转成字符串。  
+第一个参数可以指定字符串格式，第二个参数(true/false)指定是否当日期/时间为`null`时取当前时间。  
+用法: `<SELECTOR> $ datetimeToString "<format_str>"? default_now?`
+
+#### 转成日期 `toDate`
+将所有日期/时间类型转成`datetime.date`类型。  
+第一个参数(true/false)指定是否当日期/时间为`null`时取当前时间。第二个参数当选择器的选择结果是字符串时，可以指定来源字符串的格式。  
+用法: `<SELECTOR> $ toDate default_now? "<from_format_str>"? `
+
+#### 转成时间 `toDatetime`
+将所有日期/时间类型转成`datetime.datetime`类型。  
+第一个参数(true/false)指定是否当日期/时间为`null`时取当前时间。第二个参数当选择器的选择结果是字符串时，可以指定来源字符串的格式。  
+用法: `<SELECTOR> $ toDatetime default_now? "<from_format_str>"? `
