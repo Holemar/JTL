@@ -102,9 +102,9 @@ Converts the input value to a string.
 
 ### Bool
 
-* not: Inverts the boolean value.
-* and: All values are True.
-* or: One of the values is True.
+* `not`: Inverts the boolean value.
+* `and`: All values are `true`.
+* `or`: One of the values is `true`.
 
 ### Dictionary
 
