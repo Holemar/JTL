@@ -62,6 +62,12 @@ def parseArgument(argument, data):
     :param data: dict of original data to extract more fields from
     :return: a valid JSON value
     """
+    if argument is None:
+        return None
+
+    if argument == '':
+        return ''
+
     # Try loading as a constrant first
     # TODO: strings are awkward and require escaping, so figure that out
     value = json_util.load_json(argument)

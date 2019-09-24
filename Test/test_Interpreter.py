@@ -26,7 +26,7 @@ Interpreter unittest
 import unittest
 
 from JTL import Interpreter
-from JTL import json_util
+from JTL import json_util, type_change
 
 
 class InterpreterTest(unittest.TestCase):

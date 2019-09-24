@@ -29,6 +29,12 @@ def extractPath(data, path):
     :param path: str
     :return: a valid JSON value
     """
+    if not path:
+        return data
+    if path == '.':
+        return data
+    elif path[0] == '.':
+        path = path[1:]
     splitPath = path.split('.')
     return extractSplitPath(data, splitPath)
 
@@ -41,6 +47,8 @@ def extractSplitPath(data, splitPath):
     :param path: [str]
     :return: a valid JSON value
     """
+    if data is None:
+        return None
     if not hasattr(data, 'get'):
         return None
     nextData = data.get(splitPath[0])
