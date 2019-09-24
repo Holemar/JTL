@@ -41,5 +41,7 @@ def extractSplitPath(data, splitPath):
     :param path: [str]
     :return: a valid JSON value
     """
+    if not hasattr(data, 'get'):
+        return None
     nextData = data.get(splitPath[0])
     return nextData if len(splitPath) <= 1 or nextData is None else extractSplitPath(nextData, splitPath[1:])

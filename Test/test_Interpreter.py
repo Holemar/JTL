@@ -39,6 +39,7 @@ class InterpreterTest(unittest.TestCase):
             },
             'b': {'p': {'d': {'q': 'test'}}},
             'c': 'asdf',
+            'e': 'test馬大哈',
             'Z': '5.32e5'
         }
 
@@ -98,6 +99,19 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, '$ list c b.p.d.q "h" $ join "-"'), 'asdf-test-h')
         self.assertEqual(Interpreter.transform(self._testData, '$ list c q "h" '), ['asdf', None, 'h'])
         self.assertEqual(Interpreter.transform(self._testData, '$ list c q "h" $ rmNull'), ['asdf', 'h'])
+
+    def test_transformHash(self):
+        self.assertEqual(Interpreter.transform(self._testData, 'c $ md5'), '912ec803b2ce49e4a541068d495ab570')
+        self.assertEqual(Interpreter.transform(self._testData, 'e $ md5'), '61c78c5167f9b117b879def13b928bf3')
+        self.assertEqual(Interpreter.transform(self._testData, 'c $ hmac_md5 Z'), '76e9d3d906862153da2406f38ea4b675')
+        self.assertEqual(Interpreter.transform(self._testData, 'e $ hmac_md5 Z'), '9eb03ccdb4cf1920525210037a7bed58')
+        self.assertEqual(Interpreter.transform(self._testData, 'c.d $ md5'), None)
+        self.assertEqual(Interpreter.transform(self._testData, 'c $ sha1'), '3da541559918a808c2402bba5012f6c60b27661c')
+        self.assertEqual(Interpreter.transform(self._testData, 'e $ sha1'), '06e92181a6fcbfc08396ea279340042b6e9edb4a')
+        self.assertEqual(Interpreter.transform(self._testData, 'c $ hmac_sha1 Z'),
+                         'e0ec9eb2b09a0346870c4c4d89a98f3046472720')
+        self.assertEqual(Interpreter.transform(self._testData, 'e $ hmac_sha1 Z'),
+                         '673670b77bc8a24709d227fb098614699507fa0e')
 
     def test_transformFunctions(self):
         transform_data = ('a $ keys $ sorted', lambda x, y: y.join(x), {'y': '**'})

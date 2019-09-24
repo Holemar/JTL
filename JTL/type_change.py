@@ -20,12 +20,11 @@ DEFAULT_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
 
 
+@Functions.registerMaybeFunction('toString')
 def to_string(data):
     """change input to string"""
-    if data is None:
-        return None
     # time, datetime
-    elif isinstance(data, (datetime.datetime, time.struct_time)):
+    if isinstance(data, (datetime.datetime, time.struct_time)):
         return datetime_2_str(data)
     # date
     elif isinstance(data, datetime.date):
@@ -42,6 +41,7 @@ def to_string(data):
     return str(data)
 
 
+@Functions.registerFunction('dateToString')
 def date_2_str(value, format_str=None, default_now=False):
     """
     change a time to string
@@ -56,6 +56,7 @@ def date_2_str(value, format_str=None, default_now=False):
     return time_util.to_string(value, format_str, default_now=default_now)
 
 
+@Functions.registerFunction('datetimeToString')
 def datetime_2_str(value, format_str=None, default_now=False):
     """
     change a time to string
@@ -70,14 +71,9 @@ def datetime_2_str(value, format_str=None, default_now=False):
     return date_2_str(value, format_str=format_str, default_now=default_now)
 
 
-Functions.functions.update({
-    'toString': to_string,
-    # Date
-    'dateToString': date_2_str,
-    'datetimeToString': datetime_2_str,
-    'toDate': time_util.to_date,
-    'toDatetime': time_util.to_datetime,
-})
+# register functions of date
+Functions.register('toDate', time_util.to_date)
+Functions.register('toDatetime', time_util.to_datetime)
 
 
 def jtl_change(data, config_json):

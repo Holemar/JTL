@@ -201,9 +201,11 @@ def hashFunction(hashConstructor):
     """
 
     def f(s):
+        if s is None:
+            return None
         h = hashConstructor()
         h.update(json_util.encode2bytes(s))
-        return binascii.hexlify(json_util.decode2str(h.digest()))
+        return binascii.hexlify(json_util.encode2bytes(h.digest())).decode('utf8')
 
     return f
 
@@ -237,3 +239,42 @@ for name in hashFunctions:
     function = hashFunctions[name]
     functions[name] = hashFunction(function)
     functions['hmac_%s' % name] = hmacFunction(function)
+
+
+def register(operation, function):
+    """add a function to JTL.
+    :param operation: function name, the operation in JTL
+    :param function: the function.
+    """
+    functions[operation] = function
+
+
+def register_maybe(operation, function):
+    """add a maybe function to JTL.
+    if null in args return null.
+    :param operation: function name, the operation in JTL
+    :param function: the function.
+    """
+    functions[operation] = maybe(function)
+
+
+def registerFunction(operation):
+    """add a function to JTL.
+    :param operation: function name, the operation in JTL
+    """
+    def wrap(function):
+        functions[operation] = function
+        return function
+    return wrap
+
+
+def registerMaybeFunction(operation):
+    """add a maybe function to JTL.
+    if null in args return null.
+    :param operation: function name, the operation in JTL
+    """
+    def wrap(function):
+        functions[operation] = maybe(function)
+        return functions[operation]
+    return wrap
+
