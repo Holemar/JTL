@@ -205,7 +205,7 @@ def hashFunction(hashConstructor):
             return None
         h = hashConstructor()
         h.update(json_util.encode2bytes(s))
-        return binascii.hexlify(json_util.encode2bytes(h.digest())).decode('utf8')
+        return binascii.hexlify(h.digest()).decode('utf8')
 
     return f
 
