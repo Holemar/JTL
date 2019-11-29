@@ -118,6 +118,7 @@ maybeFunctions = {
     'keys': lambda d: list(d.keys()),
     'values': lambda d: list(d.values()),
     'enumChange': json_util.enum_change,
+    'enumOrKey': json_util.enum_or_key,
     'enumFileChange': json_util.enum_file_change,
 
     # Number
@@ -246,6 +247,7 @@ def register(operation, function):
     :param operation: function name, the operation in JTL
     :param function: the function.
     """
+    global functions
     functions[operation] = function
 
 
@@ -255,6 +257,7 @@ def register_maybe(operation, function):
     :param operation: function name, the operation in JTL
     :param function: the function.
     """
+    global functions
     functions[operation] = maybe(function)
 
 
@@ -263,6 +266,7 @@ def registerFunction(operation):
     :param operation: function name, the operation in JTL
     """
     def wrap(function):
+        global functions
         functions[operation] = function
         return function
     return wrap
@@ -274,6 +278,7 @@ def registerMaybeFunction(operation):
     :param operation: function name, the operation in JTL
     """
     def wrap(function):
+        global functions
         functions[operation] = maybe(function)
         return functions[operation]
     return wrap

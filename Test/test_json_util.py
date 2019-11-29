@@ -113,7 +113,7 @@ class TestJsonUtil(unittest.TestCase):
     def test_load_json_file(self):
         """load_json_file 测试"""
 
-        file_name = file_path = os.path.join(os.getcwd(), 'tests/_test.json')
+        file_name = os.path.join(os.getcwd(), 'tests/_test.json')
         with open(file_name, 'w', encoding='utf-8') as f:
             f.write('{"哈":11.2, "aa":[1,"2",3]}')
         self.assertEqual(json_util.load_json_file(file_name), {u"哈": 11.2, "aa": [1, "2", 3]})
@@ -131,7 +131,7 @@ class TestJsonUtil(unittest.TestCase):
     def test_load_dump_json_file(self):
         """load_json_file test"""
 
-        file_name = file_path = os.path.join(os.getcwd(), 'tests/_test2.json')
+        file_name = os.path.join(os.getcwd(), 'tests/_test2.json')
         t = {u"哈": 11.2, "aa": [1, "2", 3]}
         json_util.dump_json_file(t, file_name)
         self.assertEqual(json_util.load_json_file(file_name), t)

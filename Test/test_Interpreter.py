@@ -85,6 +85,10 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transform(self._testData, 'a $ keys $ sorted'), ['X', 'Y'])
         self.assertEqual(Interpreter.transform(self._testData, 'a $ values $ sorted'), [2, 3])
         self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumChange "{1: 'one', 2: 'two'}"'''), 'two')
+        self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumChange "{1: 'one', '2': 'two'}"'''), 'two')
+        self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumOrKey "{1: 'one', 2: 'two'}"'''), 'two')
+        self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumOrKey "{1: 'one', '2': 'two'}"'''), 'two')
+        self.assertEqual(Interpreter.transform(self._testData, '''a.Y $ enumOrKey "{1: 'one', 3: 'three'}"'''), 2)
 
     def test_transformSequence(self):
         self.assertEqual(Interpreter.transform(self._testData, '$ list a.X a.Y'), [3, 2])
