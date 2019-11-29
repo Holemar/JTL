@@ -82,6 +82,7 @@ class TestJsonUtil(unittest.TestCase):
 
     def test_enum_change(self):
         """enum_change tests"""
+        self.assertEqual(json_util.enum_change(1, "{1: '一', 2: '二', 3: '三'}"), '一')
         self.assertEqual(json_util.enum_change(1, {1: '一', 2: '二', 3: '三'}), '一')
         self.assertEqual(json_util.enum_change('3', {1: '一', 2: '二', 3: '三'}), '三')
         self.assertEqual(json_util.enum_change(1, {'1': '一', '2': '二', '3': '三'}), '一')
@@ -89,6 +90,17 @@ class TestJsonUtil(unittest.TestCase):
         self.assertEqual(json_util.enum_change('二', {1: '一', 2: '二', 3: '三'}), '二')
         self.assertEqual(json_util.enum_change(5, {'1': '一', '2': '二', '3': '三'}), None)
         self.assertEqual(json_util.enum_change('10', {'1': '一', '2': '二', '3': '三'}), None)
+
+    def test_enum_or_key(self):
+        """enum_or_key tests"""
+        self.assertEqual(json_util.enum_or_key(1, "{1: '一', 2: '二', 3: '三'}"), '一')
+        self.assertEqual(json_util.enum_or_key(1, {1: '一', 2: '二', 3: '三'}), '一')
+        self.assertEqual(json_util.enum_or_key('3', {1: '一', 2: '二', 3: '三'}), '三')
+        self.assertEqual(json_util.enum_or_key(1, {'1': '一', '2': '二', '3': '三'}), '一')
+        self.assertEqual(json_util.enum_or_key('2', {'1': '一', '2': '二', '3': '三'}), '二')
+        self.assertEqual(json_util.enum_or_key('二', {1: '一', 2: '二', 3: '三'}), '二')
+        self.assertEqual(json_util.enum_or_key(5, {'1': '一', '2': '二', '3': '三'}), 5)
+        self.assertEqual(json_util.enum_or_key('10', {'1': '一', '2': '二', '3': '三'}), '10')
 
     def test_load_json(self):
         """load_json test"""

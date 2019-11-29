@@ -10,11 +10,12 @@ import datetime
 from JTL import Interpreter
 from JTL import time_util
 from JTL import Functions
-from JTL.json_util import enum_change, enum_file_change, decode2str
+from JTL.json_util import enum_change, enum_or_key, enum_file_change, decode2str
 from JTL.time_util import to_date, to_datetime
 
 
-__all__ = ('enum_change', 'enum_file_change', 'date_2_str', 'datetime_2_str', 'to_date', 'to_datetime', 'jtl_change')
+__all__ = ('enum_change', 'enum_or_key', 'enum_file_change', 'date_2_str', 'datetime_2_str',
+           'to_date', 'to_datetime', 'jtl_change')
 
 DEFAULT_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 DEFAULT_DATE_FORMAT = '%Y-%m-%d'
@@ -148,3 +149,19 @@ def jtl_change(data, config_json):
     elif isinstance(data, (tuple, list)):
         return [jtl_change(d, transform_data) for d in data]
     return data
+
+
+@Functions.registerFunction('countAge')
+def count_age(data, key):
+    """
+    count age by birth_date
+    """
+    birth_date = data.get(key)
+    if not birth_date:
+        return None
+    birth_date = to_date(birth_date)
+    now = datetime.date.today()
+    if birth_date > now:
+        return None
+    timedelta = now - birth_date
+    return int(timedelta.days / 365.25)

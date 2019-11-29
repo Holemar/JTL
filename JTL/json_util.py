@@ -159,6 +159,39 @@ def enum_change(key, enum_dict):
     return None
 
 
+def enum_or_key(key, enum_dict):
+    """get the value of enum, if not found then return the key
+    :param key: key of enum json
+    :param enum_dict: enum json
+    :return: value of enum json, if not found in the enum then return the key
+
+    use in JTL: '''<SELECTOR> $ enumOrKey '{"F": "女", "M": "男"}' '''
+    """
+    if isinstance(enum_dict, str):
+        enum_dict = load_json(enum_dict)
+        assert isinstance(enum_dict, dict)
+
+    if key in enum_dict:
+        return enum_dict.get(key)
+
+    if isinstance(key, str):
+        if key.isdigit():
+            tem_key = int(key)
+            if tem_key in enum_dict:
+                value = enum_dict.get(tem_key)
+                enum_dict[key] = value
+                return value
+    else:
+        tem_key = str(key)
+        if tem_key in enum_dict:
+            value = enum_dict.get(tem_key)
+            enum_dict[key] = value
+            return value
+
+    enum_dict[key] = key
+    return key
+
+
 def load_json(value):
     """
     change strings to json
