@@ -67,6 +67,11 @@ class TestTypeChange(unittest.TestCase):
         self.assertEqual(Interpreter.transform(data, 's1 $ toDate'), datetime.date(2019, 7, 29))
         self.assertEqual(Interpreter.transform(data, 's1 $ toDatetime'), datetime.datetime(2019, 7, 29, 15, 3, 8))
         self.assertEqual(Interpreter.transform(data, 's1 $ dateToString'), '2019-07-29')
+        # 计算年龄
+        now = datetime.datetime.now()
+        birth = now - datetime.timedelta(int(365.25 * 20))
+        self.assertEqual(Interpreter.transform({'BIRTH_DATE': birth}, '* $ countAge "BIRTH_DATE" '), 20)
+        self.assertEqual(Interpreter.transform(birth, '$ countAge'), 20)
 
     def test_jtl(self):
         """jtl综合转换(无内嵌层)"""

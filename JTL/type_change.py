@@ -152,16 +152,20 @@ def jtl_change(data, config_json):
 
 
 @Functions.registerFunction('countAge')
-def count_age(data, key):
+def count_age(data, key=None):
     """
-    count age by birth_date
+    根据生日计算出年龄
     """
-    birth_date = data.get(key)
+    birth_date = None
+    if isinstance(data, dict) and key:
+        birth_date = data.get(key)
+    elif isinstance(data, (str, datetime.datetime, datetime.date, time.struct_time)) and key is None:
+        birth_date = data
     if not birth_date:
         return None
     birth_date = to_date(birth_date)
     now = datetime.date.today()
     if birth_date > now:
         return None
-    timedelta = now - birth_date
+    timedelta = now - birth_date  # 时间差
     return int(timedelta.days / 365.25)

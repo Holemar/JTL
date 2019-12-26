@@ -46,11 +46,10 @@ def to_int(data):
         return int(data)
     except (ValueError, TypeError) as e:
         pass
-
+    # 兼容 float 类型参数
     data = to_float(data)
     if data is None:
         return None
-
     try:
         return int(data)
     except (ValueError, TypeError) as e2:
@@ -77,6 +76,7 @@ functions = {
     'toFloat': to_float,
     'toInt': to_int,
     'toNumber': to_number,
+    'null': lambda *args: None,
 
     # Bool
     'and': lambda *args: all(args),
@@ -97,8 +97,8 @@ functions = {
     'rmNull': lambda args: [a for a in args if a is not None],
 
     # String
-    'join': lambda s, *args: (args[0] if len(args) > 0 else '').join(
-        [functions.get('toString')(t) for t in s if t is not None]) if isinstance(s, (tuple, list)) else None,
+    'join': lambda s, sep='': sep.join(
+        [functions.get('toString', str)(t) for t in s if t is not None]) if isinstance(s, (tuple, list)) else None,
 }
 
 

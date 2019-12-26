@@ -97,8 +97,15 @@ Converts the input value to a float, returning `null` if it is not a valid numbe
 #### `toInt`
 Converts the input value to an integer, returning `null` if it is not a valid integer.
 
+#### `toNumber`
+Converts the input value to an integer or float, returning `null` if it is not a valid number.
+
 #### `toString`
 Converts the input value to a string.
+
+#### `null`
+Always return `null`.
+
 
 ### Bool
 
@@ -297,3 +304,5 @@ Converts the value to a datetime of type `datetime.datetime`.
 The first parameter bool `default_now`: True: when value is `null` regard as now, False: when value is `null` regard as `null`.  
 The second parameter string format, when input value is a string, set the from format string.
 JTL expressions: `<SELECTOR> $ toDatetime default_now? "<from_format_str>"? `  
+
+#### Count age by birthday `countAge`
