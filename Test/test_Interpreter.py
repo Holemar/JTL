@@ -164,6 +164,8 @@ class InterpreterTest(unittest.TestCase):
         self.assertEqual(Interpreter.transformJson(data, {"tempF": "not_name $ default 'aaa'"}), {'tempF': 'aaa'})
         self.assertEqual(Interpreter.transformJson(data, {"tempF": """not_name $ default "{'a': 22}" """}),
                          {'tempF': "{'a': 22}"})
+        self.assertEqual(Interpreter.transform({'a': 'true'}, "a $ toBool $ toInt"), 1)
+        self.assertEqual(Interpreter.transform({'a': True}, "a $ toBool $ toInt"), 1)
 
 
 if __name__ == "__main__":

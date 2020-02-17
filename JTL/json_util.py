@@ -109,15 +109,15 @@ def enum_file_change(key, file_name):
 
     if isinstance(key, str):
         if key.isdigit():
-            tem_value = int(key)
-            if tem_value in enum_dict:
-                target = enum_dict.get(tem_value)
+            tem_key = int(key)
+            if tem_key in enum_dict:
+                target = enum_dict.get(tem_key)
                 enum_dict[key] = target
                 return target
     else:
-        tem_value = str(key)
-        if tem_value in enum_dict:
-            target = enum_dict.get(tem_value)
+        tem_key = str(key)
+        if tem_key in enum_dict:
+            target = enum_dict.get(tem_key)
             enum_dict[key] = target
             return target
 
@@ -146,13 +146,13 @@ def enum_change(key, enum_dict):
 
     if isinstance(key, str):
         if key.isdigit():
-            tem_value = int(key)
-            if tem_value in enum_dict:
-                return enum_dict.get(tem_value)
+            tem_key = int(key)
+            if tem_key in enum_dict:
+                return enum_dict.get(tem_key)
     else:
-        tem_value = str(key)
-        if tem_value in enum_dict:
-            return enum_dict.get(tem_value)
+        tem_key = str(key)
+        if tem_key in enum_dict:
+            return enum_dict.get(tem_key)
 
     if key in enum_dict.values():
         return key
