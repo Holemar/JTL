@@ -57,6 +57,10 @@ class TimeUtilTest(unittest.TestCase):
         self.assertEqual(to_string('2014/02/06 下午 11:59'), '2014-02-06 23:59:00')
         self.assertEqual(to_string('2014/02/06 PM 11:59:00'), '2014-02-06 23:59:00')
         self.assertEqual(to_string('2014-02/06 08:51:06'), '2014-02-06 08:51:06')  # the wrong format str
+        # 特殊
+        self.assertEqual(to_string('1970'), '1970-01-01 00:00:00')  # 只有年份
+        self.assertEqual(to_string('1970-04'), '1970-04-01 00:00:00')  # 只有年月
+        self.assertEqual(to_string('1970-4'), '1970-04-01 00:00:00')  # 只有年月
 
         # datetime, time, date, datetime.time type test
         test_time = datetime(2014, 2, 6, 8, 51, 6)
@@ -121,6 +125,10 @@ class TimeUtilTest(unittest.TestCase):
         test_time = time.strptime('2014-02-06 08:51:06', '%Y-%m-%d %H:%M:%S')  # datetime
         test_date = time.strptime('2014-02-06', '%Y-%m-%d')  # date
         self.fun_test(to_time, now_time, test_time, test_date)
+        # 特殊
+        self.assertEqual(to_time('1970'), time.strptime('1970-01-01', '%Y-%m-%d'))  # 只有年份
+        self.assertEqual(to_time('1970-04'), time.strptime('1970-04-01', '%Y-%m-%d'))  # 只有年月
+        self.assertEqual(to_time('1970-4'), time.strptime('1970-04-01', '%Y-%m-%d'))  # 只有年月
 
     def my_to_datetime(self, *args, **kwargs):
         res = to_datetime(*args, **kwargs)
@@ -131,12 +139,20 @@ class TimeUtilTest(unittest.TestCase):
         test_time = datetime(2014, 2, 6, 8, 51, 6)  # datetime
         test_date = datetime(2014, 2, 6)  # date
         self.fun_test(self.my_to_datetime, now, test_time, test_date)
+        # 特殊
+        self.assertEqual(to_datetime('1970'), datetime(1970, 1, 1))  # 只有年份
+        self.assertEqual(to_datetime('1970-04'), datetime(1970, 4, 1))  # 只有年月
+        self.assertEqual(to_datetime('1970-4'), datetime(1970, 4, 1))  # 只有年月
 
     def test_to_date(self):
         now_time = date.today
         test_time = date(2014, 2, 6)  # datetime
         test_date = date(2014, 2, 6)  # date
         self.fun_test(to_date, now_time, test_time, test_date)
+        # 特殊
+        self.assertEqual(to_date('1970'), date(1970, 1, 1))  # 只有年份
+        self.assertEqual(to_date('1970-04'), date(1970, 4, 1))  # 只有年月
+        self.assertEqual(to_date('1970-4'), date(1970, 4, 1))  # 只有年月
 
     def my_to_timestamp(self, *args, **kwargs):
         res = to_timestamp(*args, **kwargs)
@@ -148,6 +164,10 @@ class TimeUtilTest(unittest.TestCase):
         test_time = time.mktime(time.strptime('2014-02-06 08:51:06', '%Y-%m-%d %H:%M:%S'))  # datetime
         test_date = time.mktime(time.strptime('2014-02-06', '%Y-%m-%d'))  # date
         self.fun_test(self.my_to_timestamp, now_time, test_time, test_date)
+        # 特殊
+        self.assertEqual(to_timestamp('1970'), time.mktime(time.strptime('1970-01-01', '%Y-%m-%d')))  # 只有年份
+        self.assertEqual(to_timestamp('1970-04'), time.mktime(time.strptime('1970-04-01', '%Y-%m-%d')))  # 只有年月
+        self.assertEqual(to_timestamp('1970-4'), time.mktime(time.strptime('1970-04-01', '%Y-%m-%d')))  # 只有年月
 
     def test_to_datetime_time(self):
         test_time = dt(12, 9, 2)
