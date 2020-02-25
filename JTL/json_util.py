@@ -34,7 +34,10 @@ def decode2str(content):
     if isinstance(content, (bytes, bytearray)):
         # unicode-escape
         if '\\u' in str(content):
-            return content.decode('unicode-escape').encode().decode()
+            try:
+                return content.decode('unicode-escape').encode().decode()
+            except (UnicodeEncodeError, UnicodeDecodeError) as e:
+                pass
         # try code list
         for encoding in DECODE_CODING_LIST:
             try:
