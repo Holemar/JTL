@@ -262,9 +262,9 @@ def json_serializable(value):
         return value
     # time, datetime to str
     elif isinstance(value, time.struct_time):
-        return time.strftime('%Y-%m-%d %H:%M:%S', value)
+        return time.strftime('%Y-%m-%dT%H:%M:%S', value)
     elif isinstance(value, datetime.datetime):
-        return value.strftime('%Y-%m-%d %H:%M:%S')
+        return value.strftime('%Y-%m-%dT%H:%M:%S')
     elif isinstance(value, datetime.date):
         return value.strftime('%Y-%m-%d')
     elif isinstance(value, decimal.Decimal):
@@ -284,6 +284,14 @@ def json_serializable(value):
         return this_value
     else:
         return str(value)
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    """
+    JSONEncoder subclass that knows how to encode date/time and decimal types.
+    """
+    def default(self, o):
+        return json_serializable(o)
 
 
 def dump_json_file(json_value, file_path):
