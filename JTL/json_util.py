@@ -8,6 +8,7 @@ import json
 import uuid
 import time
 import datetime
+import base64
 import logging
 import decimal
 
@@ -28,6 +29,24 @@ BIG_ENUM_JSON = {}
 
 
 def decode2str(content):
+    """change str, bytes or bytearray to str"""
+    if content is None:
+        return None
+    if isinstance(content, (bytes, bytearray)):
+        return content.decode()
+    return content
+
+
+def encode2bytes(content):
+    """change str to bytes"""
+    if content is None:
+        return None
+    if isinstance(content, str):
+        content = content.encode()
+    return content
+
+
+def to_utf8_str(content):
     """change str, bytes or bytearray to utf-8 str"""
     if content is None:
         return None
@@ -67,7 +86,7 @@ def decode2str(content):
     return content
 
 
-def encode2bytes(content):
+def to_utf8_bytes(content):
     """change str to utf-8 bytes"""
     if content is None:
         return None
@@ -89,6 +108,20 @@ def encode2bytes(content):
         # If that fails, ignore error messages
         content = content.encode('utf-8', 'ignore')
     return content
+
+
+def base64_encode(s):
+    """使用base64加密"""
+    s = encode2bytes(s)
+    res = base64.b64encode(s)
+    return decode2str(res)
+
+
+def base64_decode(s):
+    """使用base64解码"""
+    s = encode2bytes(s)
+    res = base64.b64decode(s)
+    return decode2str(res)
 
 
 def enum_file_change(key, file_name):
@@ -303,6 +336,10 @@ def dump_json_file(json_value, file_path):
     """
     try:
         json_value = json_serializable(json_value)
+        # 没有文件的目录，则先创建目录，避免因此报错
+        file_dir = os.path.dirname(file_path)
+        if not os.path.isdir(file_dir):
+            os.makedirs(file_dir)
         with open(file_path, 'w', encoding='utf-8') as dump_file:
             json.dump(json_value, dump_file, indent=1, ensure_ascii=False)
     except Exception as e:

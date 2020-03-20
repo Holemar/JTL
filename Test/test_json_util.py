@@ -15,31 +15,48 @@ from JTL import json_util
 
 class TestJsonUtil(unittest.TestCase):
 
-    def test_decode2str(self):
+    def test_str_bytes(self):
+        a = "哈哈xyz呵呵馬大親"
+        s = json_util.decode2str(a)
+        self.assertEqual(a, s)
+        self.assertTrue(isinstance(s, str))
+
+        c = b'absde'
+        s2 = json_util.decode2str(c)
+        self.assertTrue(isinstance(s2, str))
+        self.assertEqual('absde', s2)
+
+        b = json_util.encode2bytes(a)
+        self.assertTrue(isinstance(b, bytes))
+        d = json_util.encode2bytes(c)
+        self.assertTrue(isinstance(d, bytes))
+        self.assertEqual(c, d)
+
+    def test_to_utf8_str(self):
         a = "哈哈xyz呵呵馬大親"
         for code in ('utf-8', 'GBK', 'big5', 'GB18030', 'unicode-escape'):
             # bytes
             b = bytes(a, code)
-            s = json_util.decode2str(b)
+            s = json_util.to_utf8_str(b)
             self.assertTrue(isinstance(s, str))
             self.assertEqual(s, a)
             # bytearray
             br = bytearray(a, code)
-            s = json_util.decode2str(br)
+            s = json_util.to_utf8_str(br)
             self.assertTrue(isinstance(s, str))
             self.assertEqual(s, a)
 
-    def test_encode2bytes(self):
+    def test_to_utf8_bytes(self):
         # big5
         a = "馬xyz大親"
         b0 = bytes(a, 'utf-8')
         code = 'big5'
         s0 = b0.decode(code)
-        b2 = json_util.encode2bytes(s0)
+        b2 = json_util.to_utf8_bytes(s0)
         self.assertTrue(isinstance(b2, bytes))
         self.assertEqual(b2, b0)
         # str
-        s = json_util.decode2str(s0)
+        s = json_util.to_utf8_str(s0)
         self.assertTrue(isinstance(s, str))
         self.assertEqual(s, a)
 
@@ -47,17 +64,26 @@ class TestJsonUtil(unittest.TestCase):
         b0 = bytes(a, 'utf-8')
         for code in ('utf-8', 'gbk', 'GB18030', 'unicode-escape'):
             s0 = b0.decode(code)
-            b2 = json_util.encode2bytes(s0)
+            b2 = json_util.to_utf8_bytes(s0)
             self.assertTrue(isinstance(b2, bytes))
             self.assertEqual(b2, b0)
             # str
-            s = json_util.decode2str(s0)
+            s = json_util.to_utf8_str(s0)
             self.assertTrue(isinstance(s, str))
             self.assertEqual(s, a)
 
+    def test_base64(self):
+        a = "W1tdLCB7fSwgeyJjYWxsYmFja3MiOiBudWxsLCAiZXJyYmFja3MiOiBudWxsLCAiY2hhaW4iOiBudWxsLCAiY2hvcmQiOiBudWxsfV0="
+        ra = '[[], {}, {"callbacks": null, "errbacks": null, "chain": null, "chord": null}]'
+        self.assertEqual(json_util.base64_decode(a), ra)
+        self.assertEqual(json_util.base64_encode(ra), a)
+
     def test_enum_file_change(self):
         """enum_file_change test"""
-        file_name = 'tests/example_enum.json'
+        file_name = '_example_enum.json'
+        content = '''{ "0": "未婚", "1": "已婚", "2": "离异", 4: "丧偶",}'''
+        with open(os.path.join(os.getcwd(), file_name), 'w', encoding='utf-8') as file:
+            file.write(content)
 
         self.assertEqual(json_util.enum_file_change('2', file_name), '离异')
         self.assertEqual(len(json_util.BIG_ENUM_JSON), 1)
@@ -79,6 +105,7 @@ class TestJsonUtil(unittest.TestCase):
         self.assertEqual(json_util.enum_file_change("4", file_name), "丧偶")
         self.assertEqual(json_util.enum_file_change(5, file_name), None)
         self.assertEqual(json_util.enum_file_change('10', file_name), None)
+        os.remove(file_name)
 
     def test_enum_change(self):
         """enum_change tests"""
