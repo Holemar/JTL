@@ -33,7 +33,11 @@ def decode2str(content):
     if content is None:
         return None
     if isinstance(content, (bytes, bytearray)):
-        return content.decode()
+        try:
+            return content.decode()
+        # 特殊类型编码，尝试解码
+        except UnicodeDecodeError as e:
+            return to_utf8_str(content)
     return content
 
 
@@ -42,7 +46,11 @@ def encode2bytes(content):
     if content is None:
         return None
     if isinstance(content, str):
-        content = content.encode()
+        try:
+            return content.encode()
+        # 特殊类型编码，尝试解码
+        except UnicodeEncodeError as e:
+            return to_utf8_bytes(content)
     return content
 
 
