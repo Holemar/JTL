@@ -16,8 +16,8 @@ import decimal
 BASE_PATH = os.getcwd()
 
 # string encoding, try to encode str or decode bytes by this list
-DECODE_CODING_LIST = ['utf-8', 'gbk', 'big5', 'gb18030']
-ENCODE_CODING_LIST = ['big5', 'gb18030', 'utf-8']
+DECODE_CODING_LIST = ['utf-8', 'gbk', 'gb2312', 'big5', 'gb18030']
+ENCODE_CODING_LIST = ['gb2312', 'big5', 'gbk', 'gb18030', 'utf-8']
 default_code = sys.getdefaultencoding()
 if default_code not in DECODE_CODING_LIST:
     DECODE_CODING_LIST.append(default_code)
